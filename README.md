@@ -4,74 +4,100 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
-A modern, maintainable approach to building ArcGIS Pro Python Toolboxes using YAML configuration with **dynamic tool generation** - zero boilerplate code required.
+A modern, maintainable approach to building ArcGIS Pro Python Toolboxes using YAML configuration with **dynamic tool generation** and **folder-per-tool architecture** - zero boilerplate code required.
 
 ## Overview
 
 This project demonstrates a YAML-based architecture for ArcGIS Pro toolboxes that:
 
 - ✅ **Eliminates boilerplate** - No wrapper classes needed, tools generated dynamically at runtime
-- ✅ **Declarative configuration** - Define tools entirely in YAML
+- ✅ **Declarative configuration** - Define tools entirely in YAML  
+- ✅ **Folder-per-tool** - Self-contained modules with co-located tests
+- ✅ **Multiple toolboxes** - Support for organizing tools into separate .pyt files
+- ✅ **Auto-discovery** - Tests discover tools and toolboxes automatically
 - ✅ **Type-safe** - Pydantic validation for all configurations
-- ✅ **Modular design** - One YAML file per tool
 - ✅ **Rich metadata** - Comprehensive documentation generated from YAML
 - ✅ **Easy to test** - Mocked arcpy allows unit testing without ArcGIS Pro
 - ✅ **Version control friendly** - Small, focused files with clear diffs
+
+## Key Concepts
+
+### Framework
+Reusable infrastructure (`src/framework/`) providing dynamic tool generation, validation, and base classes. No domain-specific logic.
+
+### Tool
+A standalone unit (`src/tools/{tool_name}/`) with configuration, implementation, and tests. Example: `load_tool_metadata/`
+
+### Toolset  
+Related tools organized together (`src/tools/{toolset_name}/`) that share helper functions or form an orchestrated workflow. Example: `spatial_analysis/` contains `buffer_analysis/`, `clip_features/`, and shared `helpers/`
+
+### Toolbox
+An ArcGIS Pro .pyt file (`src/toolboxes/`) that registers tools. One toolbox can include tools from multiple toolsets, and one tool can appear in multiple toolboxes.
 
 ## Project Structure
 
 ```
 arcgispro-yaml-pyt/
-├── toolbox/
-│   ├── yaml_toolbox.pyt        # Toolbox entry point (auto-discovers tools)
+├── src/
+│   ├── framework/                    # Backend infrastructure (reusable)
+│   │   ├── factory.py               # Dynamic tool class generation
+│   │   ├── yaml_tool.py             # YAMLTool base class
+│   │   ├── schema.py                # Pydantic validation schemas
+│   │   └── validators.py            # Runtime & config validation
 │   │
-│   ├── framework/               # Backend infrastructure (reusable)
-│   │   ├── factory.py          # Dynamic tool class generation
-│   │   ├── base/
-│   │   │   └── yaml_tool.py    # YAMLTool base class
-│   │   ├── config/
-│   │   │   └── schema.py       # Pydantic validation schemas
-│   │   ├── validation/
-│   │   │   ├── runtime_validator.py      # Parameter validation
-│   │   │   └── config_validator.py       # Config validation
-│   │   ├── metadata/
-│   │   │   ├── generator.py              # XML metadata generation
-│   │   │   └── loader_tool.py            # Metadata loader utility
-│   │   └── scripts/            # Dev/admin scripts
-│   │       └── validate_config.py
+│   ├── tools/                        # Tool implementations
+│   │   ├── spatial_analysis/        # Toolset (related tools + helpers)
+│   │   │   ├── buffer_analysis/    # Self-contained tool
+│   │   │   │   ├── tool.yml        # Tool configuration
+│   │   │   │   ├── execute.py      # Business logic
+│   │   │   │   ├── test_buffer_analysis.py  # Co-located tests
+│   │   │   │   └── __init__.py
+│   │   │   ├── clip_features/      # Another tool in toolset
+│   │   │   │   ├── tool.yml
+│   │   │   │   ├── execute.py
+│   │   │   │   ├── test_clip_features.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── helpers/            # Shared by toolset
+│   │   │   │   └── geoprocessing.py
+│   │   │   └── README.md
+│   │   │
+│   │   └── load_tool_metadata/     # Standalone tool
+│   │       ├── tool.yml
+│   │       ├── execute.py
+│   │       ├── metadata_generator.py
+│   │       ├── test_metadata_loader.py
+│   │       └── __init__.py
 │   │
-│   └── tools/                   # Business logic (tool-specific)
-│       ├── config/
-│       │   ├── toolbox.yml     # Toolbox metadata + registry
-│       │   └── tools/          # Individual tool YAMLs
-│       │       ├── buffer_analysis.yml
-│       │       ├── clip_features.yml
-│       │       └── load_tool_metadata.yml
-│       ├── utils/              # Tool execution functions
-│       │   ├── buffer.py
-│       │   └── clip.py
-│       └── helpers/            # Business helpers
-│           └── geoprocessing.py
+│   └── toolboxes/                   # Multiple .pyt files
+│       ├── spatial_analysis/
+│       │   ├── spatial_analysis.pyt
+│       │   ├── toolbox.yml          # Toolbox config
+│       │   └── *.pyt.xml            # ArcGIS metadata
+│       ├── utilities/
+│       │   ├── utilities.pyt
+│       │   └── toolbox.yml
+│       └── README.md
 │
-├── tests/                       # Test suite (arcpy mocked)
-│   ├── conftest.py             # Pytest fixtures & arcpy mocking
-│   ├── test_buffer_tool.py
-│   ├── test_buffer.py
-│   ├── test_clip_tool.py
-│   ├── test_clip.py
+├── tests/                            # Framework tests
+│   ├── conftest.py                  # Auto-discovery fixtures
+│   ├── test_discovery.py            # Auto-discovery tests
 │   ├── test_config_validation.py
 │   └── test_yaml_loading.py
 │
-├── docs/                        # Documentation
+├── scripts/
+│   └── validate_config.py           # Validation script
+│
+├── docs/                             # Documentation
 │   ├── configuration-guide.md
 │   ├── metadata-guide.md
+│   ├── addon-concept.md
 │   └── development/
 │       ├── setup.md
 │       ├── testing.md
 │       └── architecture.md
 │
-├── pyproject.toml               # Project dependencies
-└── README.md                    # This file
+├── pyproject.toml                    # Project dependencies
+└── README.md                         # This file
 ```
 
 ## Quick Start
@@ -107,100 +133,143 @@ uv pip install pytest>=7.4.0 pytest-cov>=4.1.0 pytest-mock>=3.12.0 ruff>=0.1.0
 1. Open ArcGIS Pro
 2. In the Catalog pane, right-click on **Toolboxes**
 3. Select **Add Toolbox**
-4. Navigate to `toolbox/yaml_toolbox.pyt`
-5. The toolbox will appear with two tools:
-   - **Buffer Analysis** - Create buffer polygons around input features
-   - **Clip Features** - Clip features to a boundary
+4. Navigate to `src/toolboxes/spatial_analysis/spatial_analysis.pyt` (or `utilities/utilities.pyt`)
+5. The toolbox will appear with its tools:
+   - **Spatial Analysis Toolbox**: Buffer Analysis, Clip Features
+   - **Utilities Toolbox**: Load Tool Metadata
 
 ## Adding a New Tool
 
-Adding a tool requires **only 2 files** - no wrapper classes needed!
+The folder-per-tool structure keeps everything organized and self-contained.
 
-### 1. Add tool to registry
+### Option A: Standalone Tool
 
-Edit `toolbox/tools/config/toolbox.yml`:
+Create a new tool directory:
 
-```yaml
-tools:
-  - name: my_new_tool
-    enabled: true
-    config: "tools/my_new_tool.yml"
+```
+src/tools/my_new_tool/
+├── tool.yml           # Tool configuration
+├── execute.py         # Business logic  
+├── test_my_tool.py    # Tests (co-located!)
+└── __init__.py
 ```
 
-### 2. Create tool YAML configuration
-
-Create `toolbox/tools/config/tools/my_new_tool.yml`:
+**1. Create `tool.yml`:**
 
 ```yaml
 tool:
   name: my_new_tool
   label: "My New Tool"
-  description: "Description of what the tool does"
+  description: "What the tool does"
   category: "Analysis"
   canRunInBackground: true
 
 implementation:
-  executeFunction: "toolbox.tools.utils.my_new_tool.execute_my_new_tool"
-  canRunInBackground: true
+  executeFunction: "toolbox.tools.my_new_tool.execute.execute_my_new_tool"
 
 parameters:
   - name: input_param
-    index: 0  # Parameter order (0-based)
+    index: 0
     displayName: "Input Parameter"
     datatype: GPFeatureLayer
     parameterType: Required
     direction: Input
-    description: "Description of parameter"
-  
-  - name: output_param
-    index: 1
-    displayName: "Output Parameter"
-    datatype: GPFeatureLayer
-    parameterType: Required
-    direction: Output
-    description: "Output description"
-    
-  # Optional: Add validation rules inline
-  - name: distance_param
-    index: 2
-    displayName: "Distance"
-    datatype: GPDouble
-    parameterType: Optional
-    direction: Input
     validation:
-      - type: greater_than
-        value: 0
-        message: "Distance must be positive"
+      - type: not_empty
+        message: "Input is required"
 ```
 
-### 3. Implement business logic
-
-Create `toolbox/tools/utils/my_new_tool.py`:
+**2. Create `execute.py`:**
 
 ```python
 import arcpy
-from toolbox.framework.config.schema import ToolConfig
-from toolbox.framework.validation.runtime_validator import validate_all_parameters
+from src.framework.schema import ToolConfig
+from src.framework.validators import validate_all_parameters
 
 def execute_my_new_tool(parameters, messages, config: ToolConfig):
     """Execute the tool logic."""
-    # Build parameter index map
-    param_map = {p.name: p.index for p in config.parameters}
-    
-    # Validate parameters
+    # Validate
     validate_all_parameters(parameters, config, messages)
     
-    # Extract parameters
-    input_param = parameters[param_map["input_param"]].valueAsText
-    output_param = parameters[param_map["output_param"]].valueAsText
+    # Build param map
+    param_map = {p.name: p.index for p in config.parameters}
     
-    # Your geoprocessing logic here
-    messages.addMessage("Processing...")
-    # ... arcpy operations ...
+    # Get parameters
+    input_fc = parameters[param_map["input_param"]].valueAsText
+    
+    # Business logic
+    messages.addMessage(f"Processing {input_fc}...")
+    # ... your arcpy operations ...
     messages.addMessage("Complete!")
 ```
 
+**3. Register in toolbox:**
+
+Edit `src/toolboxes/spatial_analysis/toolbox.yml` (or create a new toolbox):
+
+```yaml
+tools:
+  - name: my_new_tool
+    enabled: true
+    config: "../../tools/my_new_tool/tool.yml"
+```
+
+### Option B: Add to Existing Toolset
+
+If your tool shares helpers with existing tools (e.g., more spatial analysis tools), add it to a toolset:
+
+```
+src/tools/spatial_analysis/
+├── buffer_analysis/
+├── clip_features/
+├── my_new_tool/          # New tool in toolset
+│   ├── tool.yml
+│   ├── execute.py
+│   ├── test_my_tool.py
+│   └── __init__.py
+└── helpers/              # Shared by all tools in toolset
+    └── geoprocessing.py
+```
+
+Your tool can use shared helpers:
+
+```python
+from src.tools.spatial_analysis.helpers.geoprocessing import check_spatial_reference
+```
+
 That's it! The tool class is **generated dynamically** at runtime. No wrapper class needed!
+
+## Testing with Auto-Discovery
+
+Tests automatically discover all tools and toolboxes:
+
+```python
+# tests/test_discovery.py validates ALL tools
+def test_all_tools_have_valid_config(all_tools):
+    """Auto-discovers and validates all tool configs."""
+    from src.framework.schema import load_tool_config
+    
+    for tool_path, tool_name in all_tools:
+        config = load_tool_config(tool_path / "tool.yml")
+        assert config.tool.name == tool_name
+```
+
+Tool-specific tests are co-located:
+
+```
+my_new_tool/
+├── tool.yml
+├── execute.py
+└── test_my_tool.py  ← Tests live with the tool!
+```
+
+Run tests:
+
+```powershell
+pytest -v  # Discovers and runs all tests automatically
+```
+
+See [docs/development/testing.md](docs/development/testing.md) for details.
 
 ## Tool Documentation & Metadata
 
@@ -234,22 +303,22 @@ See [docs/metadata-guide.md](docs/metadata-guide.md) for complete documentation.
 
 **Regenerate metadata:**
 ```powershell
-# From command line
-python toolbox/framework/scripts/validate_config.py
+# From command line  
+python scripts/validate_config.py
 
-# Or use the built-in "Load Tool Metadata" utility in ArcGIS Pro
+# Or use the built-in "Load Tool Metadata" tool in ArcGIS Pro
 ```
 
 ## Validation
 
-Validate all YAML configurations before committing:
+Validate all YAML configurations:
 
 ```powershell
 # Activate UV environment
 .\.venv\Scripts\Activate.ps1
 
 # Run validation
-python toolbox/framework/scripts/validate_config.py
+python scripts/validate_config.py
 ```
 
 This checks:
@@ -286,6 +355,36 @@ pytest tests/test_buffer_tool.py -v
 See [docs/development/testing.md](docs/development/testing.md) for complete testing documentation.
 
 ## Architecture Benefits
+
+### Key Improvements
+
+**1. Folder-per-Tool Organization**
+- Each tool is a self-contained module
+- Tests live with the tool (co-located)
+- Easy to find, understand, and maintain
+- Clear ownership and modularity
+
+**2. Toolset Pattern**
+- Related tools share helpers (e.g., `spatial_analysis/helpers/`)
+- Domain-specific utilities stay scoped
+- Framework remains pure machinery
+
+**3. Flattened Framework**
+- Simple, flat structure: `factory.py`, `schema.py`, `validators.py`, `yaml_tool.py`
+- No nested subdirectories with single files
+- Cleaner imports: `from src.framework.schema import ToolConfig`
+
+**4. Multiple Toolboxes**
+- Organize tools into separate .pyt files
+- Many-to-many relationships (same tool in multiple toolboxes)
+- Aligns with ArcGIS Pro Add-in concept
+
+**5. Auto-Discovery Testing**
+- Tests discover tools/toolboxes automatically
+- Add new tool → automatically tested
+- No hardcoded test fixtures
+
+## Traditional vs YAML Approach
 
 ### Traditional Approach
 
@@ -424,3 +523,4 @@ Quick checklist:
 ## Contact
 
 For questions or issues, please open an issue on GitHub.
+

@@ -87,6 +87,30 @@ pytest tests/ -v -m slow
 
 ## Test Structure
 
+### Auto-Discovery
+
+Tests automatically discover all tools and toolboxes:
+
+```python
+# tests/conftest.py provides dynamic fixtures
+def test_all_tools_have_valid_config(all_tools):
+    """Validates ALL discovered tools automatically."""
+    for tool_path, tool_name in all_tools:
+        config_path = tool_path / "tool.yml"
+        assert config_path.exists()
+        # Validate...
+
+# Factory fixtures for specific tools
+def test_buffer_tool(get_tool):
+    tool_path = get_tool("spatial_analysis/buffer_analysis")
+    # Test specific tool...
+```
+
+**Benefits:**
+- Add new tool → automatically tested
+- No hardcoded fixture updates needed
+- Validates ALL tools consistently
+
 ### Test Markers
 
 ```python
@@ -101,7 +125,7 @@ import pytest
 
 def test_buffer_validation(mock_arcpy):
     """Test parameter validation logic - no real arcpy needed."""
-    from toolbox.utils.buffer import execute_buffer
+    from src.utils.buffer import execute_buffer
     # Test validation logic with mocked arcpy
 ```
 
@@ -128,7 +152,7 @@ Validates toolbox and tool YAML files against Pydantic schemas:
 .\.venv\Scripts\Activate.ps1
 
 # Run validation script
-python toolbox/scripts/validate_config.py
+python src/scripts/validate_config.py
 ```
 
 This checks:
@@ -164,7 +188,7 @@ The workspace includes pre-configured tasks (use `Ctrl+Shift+B`):
 - **Type Check with ty**: `ty .`
 - **Run Tests**: `pytest tests/ -v`
 - **Test with Coverage**: `pytest tests/ --cov=toolbox --cov-report=html`
-- **Validate YAML Config**: `python toolbox/scripts/validate_config.py`
+- **Validate YAML Config**: `python src/scripts/validate_config.py`
 
 All tasks except integration tests use the UV environment.
 
@@ -203,5 +227,6 @@ pytest tests/ -v
 | Integration tests | ArcGIS Pro | `pytest tests/ -v -m slow` (from AGP prompt) |
 | Linting/formatting | UV (.venv) | `ruff check .` / `ruff format .` |
 | Type checking | UV (.venv) | `ty .` |
-| Validation | UV (.venv) | `python toolbox/scripts/validate_config.py` |
+| Validation | UV (.venv) | `python src/scripts/validate_config.py` |
 | Run toolbox | ArcGIS Pro | Load `.pyt` file in ArcGIS Pro |
+

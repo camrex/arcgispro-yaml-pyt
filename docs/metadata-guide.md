@@ -6,12 +6,12 @@ This project supports generating rich metadata for both ArcGIS Pro Python Toolbo
 
 ## Toolbox-Level Metadata
 
-The `documentation` section in [toolbox.yml](../toolbox/config/toolbox.yml) supports the following elements:
+The `documentation` section in [toolbox.yml](../src/config/toolbox.yml) supports the following elements:
 
 ### Structure
 
 ```yaml
-# Note: The toolbox title comes from toolbox.label, not documentation.title
+# Note: The toolbox title comes from src.label, not documentation.title
 documentation:
   summary: |
     A brief purpose statement for the toolbox (1-3 sentences)
@@ -152,7 +152,7 @@ Run the metadata generator script to create `.pyt.xml` files from YAML documenta
 .\.venv\Scripts\Activate.ps1
 
 # Generate metadata for all tools
-python toolbox/scripts/generate_metadata_xml.py
+python src/scripts/generate_metadata_xml.py
 ```
 
 This creates XML files like:
@@ -312,8 +312,8 @@ parameter_syntax:
 ## Examples
 
 See the complete examples in:
-- [toolbox/config/tools/buffer_analysis.yml](../toolbox/config/tools/buffer_analysis.yml)
-- [toolbox/config/tools/clip_features.yml](../toolbox/config/tools/clip_features.yml)
+- [src/config/tools/buffer_analysis.yml](../src/config/tools/buffer_analysis.yml)
+- [src/config/tools/clip_features.yml](../src/config/tools/clip_features.yml)
 
 These demonstrate comprehensive documentation with all supported elements.
 
@@ -322,3 +322,4 @@ These demonstrate comprehensive documentation with all supported elements.
 - [ArcGIS Pro Python Toolbox Documentation](https://pro.arcgis.com/en/pro-app/latest/arcpy/geoprocessing_and_python/a-quick-tour-of-python-toolboxes.htm)
 - [Tool Metadata in ArcGIS Pro](https://pro.arcgis.com/en/pro-app/latest/help/analysis/geoprocessing/basics/geoprocessing-tool-reference.htm)
 - YAML Tool Configuration: [docs/yaml-toolbox-configuration-guide.md](yaml-toolbox-configuration-guide.md)
+

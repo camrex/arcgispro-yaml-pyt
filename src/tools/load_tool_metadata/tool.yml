@@ -1,0 +1,119 @@
+# =============================================================================
+# Load Tool Metadata Utility Configuration
+# =============================================================================
+# Purpose:
+#   Utility tool to load and apply documentation metadata from YAML files
+#   to tool XML metadata files. Run this tool after updating documentation
+#   in YAML configuration files to regenerate the .pyt.xml metadata files.
+#
+# Author: YAML Toolbox Example
+# Created: 2026-01-15
+# Last Modified: 2026-01-15
+#
+# Notes:
+#   - Updates all enabled tools in the toolbox
+#   - Generates/overwrites .pyt.xml files in the toolbox directory
+#   - Close and reopen toolbox after running to see updated metadata
+# =============================================================================
+
+# Tool metadata
+tool:
+  name: load_tool_metadata
+  label: "Load Tool Metadata"
+  description: "Update tool metadata XML files from YAML documentation"
+  category: "Utilities"
+  canRunInBackground: false
+
+# Python implementation
+implementation:
+  executeFunction: "toolbox.tools._metadata_loader.execute.execute_metadata_loader"
+
+# Parameter definitions
+parameters:
+  - name: output_message
+    index: 0
+    displayName: "Output Message"
+    datatype: GPString
+    parameterType: Derived
+    direction: Output
+    description: "Status message from metadata loading process"
+
+# Documentation metadata for ArcGIS Pro
+documentation:
+  summary: |
+    Loads documentation metadata from YAML configuration files and generates
+    XML metadata files that ArcGIS Pro uses for tool documentation display.
+  
+  usage: |
+    This utility tool reads the documentation sections from tool YAML configuration 
+    files and generates corresponding .pyt.xml metadata files. Run this tool whenever 
+    you update documentation in the YAML files to refresh the tool metadata displayed 
+    in ArcGIS Pro.
+    
+    The tool will:
+    - Read documentation from all enabled tools in toolbox.yml
+    - Generate .pyt.xml files with proper ArcGIS Pro formatting
+    - Report success/failure for each tool
+    - Provide instructions for viewing updated metadata
+    
+    Tips and Best Practices:
+    - Run this tool after editing documentation in YAML files
+    - Close and reopen the toolbox to see updated metadata
+    - Check the tool messages for any warnings or errors
+    - Backup manually-edited .pyt.xml files before running (they will be overwritten)
+    - Use Right-click tool → Item Description to verify the metadata
+  
+  tags:
+    - utility
+    - metadata
+    - documentation
+    - administration
+  
+  credits: |
+    Utility tool for YAML-based ArcGIS Pro Python Toolbox. Automates metadata 
+    generation from YAML documentation sections.
+  
+  use_limitations: |
+    This utility tool is provided for developer convenience without warranty. Users 
+    may use this tool to manage metadata subject to:
+    - Understanding that existing XML files will be overwritten
+    - Acceptance of responsibility for maintaining backups if needed
+    - Compliance with organizational change management procedures
+    - Use at your own risk for modifying toolbox metadata
+  
+  parameter_syntax:
+    output_message:
+      dialog_explanation: |
+        Displays the result of the metadata loading operation, including the 
+        number of tools successfully updated.
+      scripting_explanation: |
+        Returns a string message indicating success or failure. Example: 
+        "Successfully updated metadata for 2 tool(s)"
+  
+  code_samples:
+    - title: "Load Metadata from Python Script"
+      description: |
+        Run the metadata loader tool programmatically from a Python script.
+      code: |
+        import arcpy
+        
+        # Run the metadata loader tool
+        result = arcpy.yamlanalysistoolbox.LoadToolMetadata()
+        
+        # Check the output message
+        print(result.getMessages())
+        print(f"Result: {result.getOutput(0)}")
+    
+    - title: "Automated Metadata Update"
+      description: |
+        Include metadata updates as part of a toolbox maintenance script.
+      code: |
+        import arcpy
+        
+        # Update metadata after YAML changes
+        try:
+            arcpy.yamlanalysistoolbox.LoadToolMetadata()
+            print("Metadata updated successfully")
+        except arcpy.ExecuteError:
+            print("Error updating metadata:")
+            print(arcpy.GetMessages())

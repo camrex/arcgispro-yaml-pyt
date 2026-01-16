@@ -145,16 +145,16 @@ The YAML-based architecture follows a clear separation of concerns:
                           │ Calls
                           ▼
 ┌──────────────────────────────────────────────────────────────┐
-│ tools/utils/*.py (Business logic functions)                 │
-│ - execute_buffer(), execute_clip(), etc.                    │
+│ tools/{tool_name}/execute.py (Business logic)               │
+│ - Each tool has its own execute function                    │
 │ - Extract parameters by index from parameters list          │
 │ - Actual geoprocessing code                                 │
-│ - Calls helpers for reusable code                           │
+│ - Can use shared helpers from toolset                       │
 └─────────────────────────┬────────────────────────────────────┘
-                          │ Uses
+                          │ Can use
                           ▼
 ┌──────────────────────────────────────────────────────────────┐
-│ tools/helpers/*.py (Reusable functions)                     │
+│ tools/{toolset}/helpers/*.py (Shared utilities)             │
 │ - validate_feature_class()                                  │
 │ - check_spatial_reference()                                 │
 │ - get_feature_count()                                       │
@@ -196,55 +196,50 @@ The YAML-based architecture follows a clear separation of concerns:
 Complete folder structure for YAML-based toolbox:
 
 ```
-my-arcgis-toolbox/
-├── toolbox/
-│   ├── yaml_toolbox.pyt         # Auto-loading container ⭐
+my-arcgis-src/
+├── src/
+│   ├── yaml_toolbox.pyt         # Legacy single-toolbox entry (optional)
 │   │
-│   ├── framework/                # Framework code ⭐
+│   ├── framework/                # Framework code (flat structure) ⭐
 │   │   ├── factory.py           # Tool factory for dynamic loading
-│   │   │
-│   │   ├── base/                # Base classes
-│   │   │   └── yaml_tool.py     # YAMLTool base class
-│   │   │
-│   │   ├── config/              # Configuration and validation
-│   │   │   └── schema.py        # Pydantic validation schemas
-│   │   │
-│   │   ├── metadata/            # Metadata generation
-│   │   │   ├── generator.py    # XML metadata generator
-│   │   │   └── loader_tool.py  # Metadata loader utility
-│   │   │
-│   │   ├── scripts/             # Development scripts
-│   │   │   └── validate_config.py
-│   │   │
-│   │   └── validation/          # Runtime validation
-│   │       ├── config_validator.py
-│   │       └── runtime_validator.py
+│   │   ├── yaml_tool.py         # YAMLTool base class
+│   │   ├── schema.py            # Pydantic validation schemas
+│   │   └── validators.py        # Config & runtime validation
 │   │
-│   └── tools/                    # Tool implementations
-│       │
-│       ├── config/              # YAML configurations ⭐
-│       │   ├── toolbox.yml      # Toolbox metadata + registry
-│       │   └── tools/           # Individual tool YAMLs
-│       │       ├── buffer_analysis.yml
-│       │       ├── clip_features.yml
-│       │       └── load_tool_metadata.yml  # Note: utils in framework/metadata/
-│       │
-│       ├── helpers/             # Reusable utilities
-│       │   └── geoprocessing.py
-│       │
-│       └── utils/               # Business logic (testable)
-│           ├── buffer.py        # execute_buffer() function
-│           └── clip.py          # execute_clip() function
+│   ├── toolboxes/                # Multiple toolbox .pyt files ⭐
+│   │   ├── spatial_analysis/
+│   │   │   ├── spatial_analysis.pyt
+│   │   │   └── toolbox.yml      # Toolbox config + tool list
+│   │   └── utilities/
+│   │       ├── utilities.pyt
+│   │       └── toolbox.yml
+│   │
+│   └── tools/                    # Folder-per-tool structure ⭐
+│       ├── spatial_analysis/     # Toolset (related tools)
+│       │   ├── buffer_analysis/
+│       │   │   ├── tool.yml
+│       │   │   ├── execute.py
+│       │   │   └── test_buffer.py
+│       │   ├── clip_features/
+│       │   │   ├── tool.yml
+│       │   │   ├── execute.py
+│       │   │   └── test_clip.py
+│       │   └── helpers/          # Shared utilities
+│       │       └── geoprocessing.py
+│       └── load_tool_metadata/   # Standalone tool
+│           ├── tool.yml
+│           ├── execute.py
+│           ├── metadata_generator.py  # Self-contained
+│           └── test_metadata_loader.py
 │
-├── tests/                        # Test suite
-│   ├── conftest.py
-│   ├── test_buffer.py
-│   ├── test_buffer_tool.py
-│   ├── test_clip.py
-│   ├── test_clip_tool.py
+├── tests/                        # Framework tests (auto-discovery) ⭐
+│   ├── conftest.py              # Dynamic fixtures (no hardcoded tools)
+│   ├── test_discovery.py        # Validates all discovered tools
 │   ├── test_config_validation.py
-│   ├── test_metadata_loader_tool.py
 │   └── test_yaml_loading.py
+│
+├── scripts/                      # Development scripts
+│   └── validate_config.py
 │
 ├── docs/                         # Documentation
 │   ├── configuration-guide.md
@@ -266,22 +261,21 @@ my-arcgis-toolbox/
 
 ### Toolbox Registry
 
-**toolbox/tools/config/toolbox.yml** - Toolbox metadata, tool registry, and documentation:
+**src/toolboxes/{toolbox_name}/toolbox.yml** - Toolbox metadata, tool registry, and documentation:
 
 ```yaml
 # Toolbox metadata
 toolbox:
-  label: "YAML Analysis Toolbox"
-  alias: "yamlanalysistoolbox"
-  description: "Example YAML-based ArcGIS Pro Python Toolbox"
+  label: "Spatial Analysis Toolbox"
+  alias: "spatialanalysistoolbox"
+  description: "YAML-configured spatial analysis tools"
   version: "1.0.0"
 
 # Toolbox documentation (appears in ArcGIS Pro metadata)
 documentation:
   summary: |
-    A proof-of-concept ArcGIS Pro Python Toolbox demonstrating configuration-driven 
-    tool development using YAML files. Eliminates boilerplate code through dynamic 
-    tool generation.
+    A collection of spatial analysis tools configured using YAML. 
+    Tools are dynamically generated at runtime from configuration files.
   description: |
     This toolbox provides a modern approach to ArcGIS Pro Python Toolbox development 
     by using YAML configuration files to define tools instead of writing repetitive 
@@ -306,23 +300,24 @@ tools:
   
   - name: clip_features
     enabled: true
-    config: "tools/clip_features.yml"
+    implementation_path: "spatial_analysis/clip_features"
   
   - name: load_tool_metadata
     enabled: true
-    config: "tools/load_tool_metadata.yml"
+    implementation_path: "load_tool_metadata"
 ```
 
 **Key Features:**
 - ✅ Central registry of all tools
 - ✅ Enable/disable tools without code changes
+- ✅ `implementation_path` points to folder in tools/
 - ✅ Version tracking
 - ✅ Toolbox-level documentation metadata
 - ✅ Clear tool inventory
 
 ### Individual Tool Configuration
 
-**toolbox/tools/config/tools/buffer_analysis.yml** - Complete tool definition:
+**src/tools/spatial_analysis/buffer_analysis/tool.yml** - Complete tool definition:
 
 ```yaml
 # Tool metadata
@@ -333,9 +328,9 @@ tool:
   category: "Analysis"
   canRunInBackground: true
 
-# Python implementation
+# Python implementation (execute function is in execute.py in same folder)
 implementation:
-  executeFunction: "toolbox.tools.utils.buffer.execute_buffer"
+  module: "execute"  # Relative import from tool folder
 
 # Parameter definitions
 parameters:
@@ -432,7 +427,7 @@ documentation:
         )
 ```
 
-**toolbox/tools/config/tools/clip_features.yml** - Simpler example:
+**src/tools/config/tools/clip_features.yml** - Simpler example:
 
 ```yaml
 tool:
@@ -495,7 +490,7 @@ documentation:
 
 Type-safe validation for all YAML configurations:
 
-**toolbox/framework/config/schema.py**:
+**src/framework/schema.py**:
 
 ```python
 """Pydantic schemas for YAML configuration validation."""
@@ -737,7 +732,7 @@ def load_tool_config(config_path: Path) -> ToolConfig:
 
 The `.pyt` file becomes a generic, YAML-driven container using a factory pattern:
 
-**toolbox/yaml_toolbox.pyt**:
+**src/yaml_toolbox.pyt**:
 
 ```python
 """ArcGIS Pro Python Toolbox - Auto-loaded from YAML."""
@@ -751,7 +746,7 @@ toolbox_path = Path(__file__).parent
 sys.path.insert(0, str(toolbox_path.parent))
 
 # Import after path setup
-from toolbox.framework.factory import load_and_register_tools
+from src.framework.factory import load_and_register_tools
 
 # Load and register all tool classes at module level
 # (ArcGIS Pro needs them discoverable as module-level names)
@@ -791,7 +786,7 @@ class Toolbox:
         print(f"Toolbox loaded: {len(self.tools)} tools")
 ```
 
-**toolbox/framework/factory.py** - Tool factory for dynamic class generation:
+**src/framework/factory.py** - Tool factory for dynamic class generation:
 
 ```python
 """Dynamic tool class factory."""
@@ -799,8 +794,8 @@ class Toolbox:
 import importlib
 from pathlib import Path
 
-from toolbox.framework.base.yaml_tool import YAMLTool
-from toolbox.framework.config.schema import load_tool_config, load_toolbox_config
+from src.framework.base.yaml_tool import YAMLTool
+from src.framework.config.schema import load_tool_config, load_toolbox_config
 
 
 def create_tool_class(tool_name: str, config_path: Path, execute_func):
@@ -901,7 +896,7 @@ def load_and_register_tools(config_dir: Path):
 
 All tools inherit from `YAMLTool` which handles YAML loading and parameter generation:
 
-**toolbox/framework/base/yaml_tool.py**:
+**src/framework/yaml_tool.py**:
 
 ```python
 """Base class for YAML-configured tools."""
@@ -910,7 +905,7 @@ from pathlib import Path
 
 import arcpy
 
-from toolbox.framework.config.schema import ToolConfig, load_tool_config
+from src.framework.config.schema import ToolConfig, load_tool_config
 
 
 class YAMLTool:
@@ -926,7 +921,7 @@ class YAMLTool:
         self.tool_name = tool_name
         
         # Load tool configuration from individual YAML file
-        toolbox_path = Path(__file__).parent.parent.parent  # Go up to toolbox/
+        toolbox_path = Path(__file__).parent.parent.parent  # Go up to src/
         config_path = toolbox_path / "tools" / "config" / "tools" / f"{tool_name}.yml"
         
         if not config_path.exists():
@@ -1003,44 +998,39 @@ class YAMLTool:
 
 ### No Manual Tool Wrappers Needed!
 
-With the factory pattern, you don't create individual tool classes. The factory creates them dynamically from YAML. You only write the business logic in utils.
+### Business Logic Implementation
 
-### Business Logic in Utils
+Each tool has its own `execute.py` file with the actual implementation.
 
-Separate, testable business logic using parameter names (not raw indices):
-
-**toolbox/tools/utils/buffer.py**:
+**src/tools/spatial_analysis/buffer_analysis/execute.py**:
 
 ```python
 """Buffer analysis business logic."""
 
 import arcpy
+from pathlib import Path
 
-from toolbox.framework.config.schema import ToolConfig
-from toolbox.tools.helpers.geoprocessing import validate_feature_class
+# Import shared helpers from toolset
+from ..helpers.geoprocessing import validate_feature_class
 
 
-def execute_buffer(parameters, messages, config: ToolConfig):
+def execute_buffer(parameters, messages):
     """
     Execute buffer analysis.
     
     Args:
         parameters: ArcGIS tool parameters (list)
         messages: ArcGIS messages object
-        config: Tool configuration loaded from YAML
     """
     try:
-        # Build parameter name-to-index map from config (semantic access!)
-        param_map = {p.name: p.index for p in config.parameters}
+        # Extract parameters by index (defined in tool.yml)
+        input_features = parameters[0].valueAsText
+        buffer_distance = parameters[1].value
+        buffer_units = parameters[2].valueAsText
+        dissolve = parameters[3].value
+        output_features = parameters[4].valueAsText
         
-        # Extract parameters using names (not raw indices)
-        input_features = parameters[param_map["input_features"]].valueAsText
-        buffer_distance = parameters[param_map["buffer_distance"]].value
-        buffer_units = parameters[param_map["buffer_units"]].valueAsText
-        dissolve = parameters[param_map["dissolve_output"]].value
-        output_features = parameters[param_map["output_features"]].valueAsText
-        
-        # Validate inputs
+        # Validate inputs using shared helper
         validate_feature_class(input_features, messages)
         
         messages.addMessage(
@@ -1144,15 +1134,15 @@ Regardless of complexity, you only write **one YAML file** and **one utils funct
 
 The framework scales with your needs - from simple single-operation tools to sophisticated multi-step workflows.
 
-**toolbox/tools/utils/clip.py**:
+**src/tools/utils/clip.py**:
 
 ```python
 """Clip features business logic."""
 
 import arcpy
 
-from toolbox.framework.config.schema import ToolConfig
-from toolbox.tools.helpers.geoprocessing import validate_feature_class
+from src.framework.config.schema import ToolConfig
+from src.tools.helpers.geoprocessing import validate_feature_class
 
 
 def execute_clip(parameters, messages, config: ToolConfig):
@@ -1195,12 +1185,14 @@ def execute_clip(parameters, messages, config: ToolConfig):
         raise
 ```
 
-### Reusable Helpers
+### Shared Helpers (Toolset Pattern)
 
-**toolbox/tools/helpers/geoprocessing.py**:
+Tools within a toolset can share helper functions:
+
+**src/tools/spatial_analysis/helpers/geoprocessing.py**:
 
 ```python
-"""Reusable geoprocessing helpers."""
+"""Shared geoprocessing helpers for spatial analysis tools."""
 
 import arcpy
 
@@ -1366,9 +1358,9 @@ This framework solves metadata management by treating YAML as the **single sourc
 
 ### Load Tool Metadata Utility
 
-The toolbox includes a utility tool to generate ArcGIS Pro XML metadata from YAML documentation sections:
+The toolbox includes a utility tool to generate ArcGIS Pro XML metadata from YAML documentation sections.
 
-**Note:** Unlike other tools whose utils are in `tools/utils/`, the metadata loader's implementation is in `framework/metadata/loader_tool.py` since it's a framework-level utility.
+**Note:** The metadata loader is a self-contained tool in `tools/load_tool_metadata/` with its own `metadata_generator.py` module.
 
 **Usage Methods:**
 
@@ -1388,11 +1380,11 @@ The toolbox includes a utility tool to generate ArcGIS Pro XML metadata from YAM
 #### Method 2: Using the CLI (Automation)
 
 ```powershell
-# From project root
-python -m toolbox.framework.metadata.loader_tool
-
-# Or create a dedicated script
+# From project root (if you create a script)
 python scripts/regenerate_metadata.py
+
+# Or use the tool's execute function directly
+python -c "from src.tools.load_tool_metadata.execute import execute_load_tool_metadata; execute_load_tool_metadata(...)"
 ```
 
 **Perfect for:**
@@ -1408,8 +1400,8 @@ python scripts/regenerate_metadata.py
 """Regenerate all tool metadata from YAML configurations."""
 
 from pathlib import Path
-from toolbox.framework.metadata.generator import MetadataGenerator
-from toolbox.framework.config.schema import load_toolbox_config, load_tool_config
+from src.framework.metadata.generator import MetadataGenerator
+from src.framework.config.schema import load_toolbox_config, load_tool_config
 
 def regenerate_all_metadata():
     """Regenerate metadata for all enabled tools."""
@@ -1485,7 +1477,7 @@ python -m toolbox.framework.metadata.loader_tool
 ```powershell
 # ArcGIS Pro corrupted a metadata file
 # Delete it and regenerate:
-Remove-Item toolbox/yaml_toolbox.BufferAnalysisTool.pyt.xml
+Remove-Item src/yaml_toolbox.BufferAnalysisTool.pyt.xml
 python -m toolbox.framework.metadata.loader_tool
 ```
 
@@ -1509,7 +1501,7 @@ python -m toolbox.framework.metadata.loader_tool
    
    - name: Verify metadata exists
      run: |
-       if (!(Test-Path toolbox/*.pyt.xml)) {
+       if (!(Test-Path src/*.pyt.xml)) {
          throw "Metadata generation failed"
        }
    ```
@@ -1538,22 +1530,17 @@ python -m toolbox.framework.metadata.loader_tool
 
 ### Adding a New Tool
 
-**Step 1: Add tool to registry**
+**Option A: Standalone Tool**
 
-Edit `toolbox/tools/config/toolbox.yml`:
+**Step 1: Create tool folder**
 
-```yaml
-tools:
-  # ... existing tools ...
-  
-  - name: merge_features
-    enabled: true
-    config: "tools/merge_features.yml"
+```powershell
+mkdir src/tools/merge_features
 ```
 
-**Step 2: Create tool YAML configuration**
+**Step 2: Create tool.yml**
 
-Create `toolbox/tools/config/tools/merge_features.yml`:
+Create `src/tools/merge_features/tool.yml`:
 
 ```yaml
 tool:
@@ -1564,7 +1551,7 @@ tool:
   canRunInBackground: true
 
 implementation:
-  executeFunction: "toolbox.tools.utils.merge.execute_merge"
+  module: "execute"  # execute.py in same folder
 
 parameters:
   - name: input_features
@@ -1596,38 +1583,28 @@ documentation:
     - data management
 ```
 
-**Step 3: Implement business logic**
+**Step 3: Implement execute.py**
 
-Create `toolbox/tools/utils/merge.py`:
+Create `src/tools/merge_features/execute.py`:
 
 ```python
 """Merge features business logic."""
 
 import arcpy
 
-from toolbox.framework.config.schema import ToolConfig
-from toolbox.tools.helpers.geoprocessing import (
-    validate_feature_class,
-    get_feature_count
-)
 
-
-def execute_merge(parameters, messages, config: ToolConfig):
+def execute_merge(parameters, messages):
     """
     Execute merge operation.
     
     Args:
         parameters: ArcGIS tool parameters (list)
         messages: ArcGIS messages object
-        config: Tool configuration from YAML
     """
     try:
-        # Build parameter map for semantic access
-        param_map = {p.name: p.index for p in config.parameters}
-        
-        # Extract parameters using names
-        input_value_table = parameters[param_map["input_features"]].value
-        output_features = parameters[param_map["output_features"]].valueAsText
+        # Extract parameters by index
+        input_value_table = parameters[0].value
+        output_features = parameters[1].valueAsText
         
         # Parse value table
         input_list = [row[0] for row in input_value_table]
@@ -1647,7 +1624,7 @@ def execute_merge(parameters, messages, config: ToolConfig):
         )
         
         # Report results
-        result_count = get_feature_count(output_features)
+        result_count = int(arcpy.management.GetCount(output_features)[0])
         messages.addMessage(f"✓ Created {result_count:,} merged features")
         messages.addMessage("Merge complete!")
         
@@ -1656,20 +1633,54 @@ def execute_merge(parameters, messages, config: ToolConfig):
         raise
 ```
 
-**That's it!** The factory auto-discovers and creates the tool class. No manual tool class creation or registration needed.
+**Step 4: Add to toolbox**
+
+Edit `src/toolboxes/spatial_analysis/toolbox.yml`:
+
+```yaml
+tools:
+  # ... existing tools ...
+  
+  - name: merge_features
+    enabled: true
+    implementation_path: "merge_features"
+```
+
+**Step 5: Create test (optional but recommended)**
+
+Create `src/tools/merge_features/test_merge.py`:
+
+```python
+"""Tests for merge tool."""
+
+import pytest
+
+
+def test_merge_tool_exists(get_tool):
+    """Verify merge tool can be loaded."""
+    tool_path = get_tool("merge_features")
+    assert (tool_path / "tool.yml").exists()
+```
+
+**That's it!** Auto-discovery will find and test the tool automatically.
 
 ---
 
 ## Benefits
 
-### 1. Complete Separation of Concerns
-- **toolbox.yml**: Toolbox metadata + registry + documentation
-- **tools/*.yml**: Individual tool configurations with documentation
-- **.pyt + factory.py**: Generic container (rarely changes)
-- **No manual tool wrappers needed** - dynamically generated by factory
-- **utils/*.py**: Business logic (testable)
-- **helpers/*.py**: Reusable code (shared)
-- **framework/**: Core infrastructure (base classes, schemas, metadata generation)
+### 1. Folder-per-Tool Organization
+- **Self-contained**: Each tool is a complete module
+- **Co-located tests**: Tests live with implementation
+- **Toolset pattern**: Related tools can share helpers
+- **Easy to navigate**: Clear folder structure
+- **Scalable**: Add tools without affecting others
+
+### 2. Complete Separation of Concerns
+- **tool.yml**: Tool configuration and documentation
+- **execute.py**: Business logic implementation
+- **test_*.py**: Tests (co-located with tool)
+- **helpers/**: Shared utilities (for toolsets)
+- **framework/**: Core infrastructure (rarely changes)
 
 ### 2. Minimal Boilerplate
 - **Traditional**: 50+ lines per tool for parameters + separate tool class
@@ -1750,14 +1761,14 @@ parameters:
 
 Validate all YAML configurations before deployment:
 
-**toolbox/framework/scripts/validate_config.py**:
+**src/framework/scripts/validate_config.py**:
 
 ```python
 """Validate all YAML configurations."""
 
 from pathlib import Path
 
-from toolbox.framework.config.schema import load_tool_config, load_toolbox_config
+from src.framework.config.schema import load_tool_config, load_toolbox_config
 
 
 def validate_all_configs():
@@ -1820,13 +1831,13 @@ python -m toolbox.framework.scripts.validate_config
 import pytest
 from unittest.mock import Mock, patch
 
-from toolbox.framework.config.schema import (
+from src.framework.config.schema import (
     ImplementationConfig,
     ParameterConfig,
     ToolConfig,
     ToolMetadata,
 )
-from toolbox.tools.utils.buffer import execute_buffer
+from src.tools.utils.buffer import execute_buffer
 
 
 @pytest.fixture
@@ -1896,8 +1907,8 @@ def test_execute_buffer(mock_count, mock_buffer, mock_parameters, mock_buffer_co
 import pytest
 from pathlib import Path
 
-from toolbox.framework.base.yaml_tool import YAMLTool
-from toolbox.framework.config.schema import load_tool_config
+from src.framework.base.yaml_tool import YAMLTool
+from src.framework.config.schema import load_tool_config
 
 
 def test_buffer_tool_config_loads():
@@ -1920,7 +1931,7 @@ def test_buffer_tool_config_loads():
 def test_buffer_tool_parameters():
     """Test that YAMLTool generates parameters correctly."""
     # Create a test tool instance (doesn't need arcpy for this)
-    from toolbox.framework.factory import create_tool_class
+    from src.framework.factory import create_tool_class
     from unittest.mock import Mock
     
     config_path = Path(__file__).parent.parent / "toolbox" / "tools" / "config" / "tools" / "buffer_analysis.yml"
@@ -2096,3 +2107,4 @@ This YAML-based approach provides:
 ---
 
 **This YAML-based approach with factory pattern transforms ArcGIS Pro toolbox development into a maintainable, scalable, and collaborative process. By eliminating manual tool wrapper classes and using dynamic code generation, teams can focus entirely on business logic while the framework handles all boilerplate.**
+

@@ -115,10 +115,10 @@ python -m pytest tests/ --cov=toolbox --cov-report=html
 # Validate YAML configurations (either environment)
 # UV environment:
 .venv\Scripts\activate
-$env:PYTHONPATH = "$PWD"; python toolbox/framework/scripts/validate_config.py
+$env:PYTHONPATH = "$PWD"; python src/framework/scripts/validate_config.py
 
 # Or ArcGIS Pro environment:
-$env:PYTHONPATH = "$PWD"; python toolbox/framework/scripts/validate_config.py
+$env:PYTHONPATH = "$PWD"; python src/framework/scripts/validate_config.py
 ```
 
 ## Using the Toolbox in ArcGIS Pro
@@ -126,7 +126,7 @@ $env:PYTHONPATH = "$PWD"; python toolbox/framework/scripts/validate_config.py
 1. Open ArcGIS Pro
 2. In the Catalog pane, right-click **Toolboxes**
 3. Select **Add Toolbox**
-4. Navigate to `toolbox/yaml_toolbox.pyt`
+4. Navigate to `src/yaml_toolbox.pyt`
 ### UV Environment (.venv/)
 - **Use for**: Daily development, linting, formatting, unit tests
 - **Advantages**: Fast, lightweight, doesn't require ArcGIS Pro
@@ -150,10 +150,10 @@ $env:PYTHONPATH = "$PWD"; python toolbox/framework/scripts/validate_config.py
 | Integration tests (`@pytest.mark.slow`) | ArcGIS Pro |
 | Running tools in ArcGIS Pro | ArcGIS Pro |
 | YAML validation | Either |
-- `toolbox/tools/` - Tool utilities (business logic)
-- `toolbox/utils/` - Business logic
-- `toolbox/helpers/` - Reusable utilities
-- `toolbox/models/` - Pydantic validation models
+- `src/tools/` - Tool utilities (business logic)
+- `src/utils/` - Business logic
+- `src/helpers/` - Reusable utilities
+- `src/models/` - Pydantic validation models
 - `tests/` - Test suite
 
 ## VS Code Tasks
@@ -189,4 +189,5 @@ Available tasks (Ctrl+Shift+P → "Tasks: Run Task"):
 **YAML validation fails:**
 - Check YAML syntax in config files
 - Ensure parameter mappings match parameters
-- Run: `python toolbox/scripts/validate_config.py`
+- Run: `python src/scripts/validate_config.py`
+

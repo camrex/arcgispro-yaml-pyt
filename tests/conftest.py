@@ -77,17 +77,86 @@ def mock_arcpy():
 
 
 @pytest.fixture
-def config_dir():
-    """Get path to config directory."""
-    return Path(__file__).parent.parent / "toolbox" / "tools" / "config"
+def toolbox_root():
+    """Get path to toolboxes root directory."""
+    return Path(__file__).parent.parent / "src" / "toolboxes"
 
 
 @pytest.fixture
-def sample_tool_config(config_dir):
-    """Load a sample tool configuration."""
-    from toolbox.framework.config.schema import load_tool_config
+def tools_root():
+    """Get path to tools root directory."""
+    return Path(__file__).parent.parent / "src" / "tools"
 
-    return load_tool_config(config_dir / "tools" / "buffer_analysis.yml")
+
+@pytest.fixture
+def all_toolboxes(toolbox_root):
+    """Discover all toolbox directories (contain toolbox.yml)."""
+    toolboxes = []
+    for item in toolbox_root.iterdir():
+        if item.is_dir() and (item / "toolbox.yml").exists():
+            toolboxes.append(item)
+    return toolboxes
+
+
+@pytest.fixture
+def all_tools(tools_root):
+    """Discover all tool directories (contain tool.yml).
+
+    Searches both standalone tools and tools within toolsets.
+    Returns list of tuples: (tool_path, tool_name)
+    """
+    tools = []
+
+    def find_tools(directory: Path, depth: int = 0):
+        """Recursively find tool directories (max depth 2 for toolsets)."""
+        if depth > 2:  # Prevent infinite recursion
+            return
+
+        for item in directory.iterdir():
+            if not item.is_dir() or item.name.startswith("_"):
+                continue
+
+            # Check if this is a tool directory
+            tool_yml = item / "tool.yml"
+            if tool_yml.exists():
+                tools.append((item, item.name))
+            else:
+                # Check subdirectories (for toolsets)
+                find_tools(item, depth + 1)
+
+    find_tools(tools_root)
+    return tools
+
+
+@pytest.fixture
+def get_toolbox(toolbox_root):
+    """Factory fixture to get a specific toolbox by name."""
+
+    def _get_toolbox(name: str) -> Path:
+        toolbox_path = toolbox_root / name
+        if not toolbox_path.exists():
+            raise FileNotFoundError(f"Toolbox not found: {name}")
+        return toolbox_path
+
+    return _get_toolbox
+
+
+@pytest.fixture
+def get_tool(tools_root):
+    """Factory fixture to get a specific tool by path.
+
+    Usage:
+        get_tool("load_tool_metadata")  # Standalone tool
+        get_tool("spatial_analysis/buffer_analysis")  # Toolset tool
+    """
+
+    def _get_tool(tool_path: str) -> Path:
+        tool = tools_root / tool_path
+        if not tool.exists():
+            raise FileNotFoundError(f"Tool not found: {tool_path}")
+        return tool
+
+    return _get_tool
 
 
 @pytest.fixture

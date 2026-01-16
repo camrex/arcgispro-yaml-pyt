@@ -4,16 +4,16 @@ import pytest
 
 
 @pytest.mark.unit
-def test_load_toolbox_config(config_dir):
+def test_load_toolbox_config(get_toolbox):
     """Test loading main toolbox configuration."""
-    from toolbox.framework.config.schema import load_toolbox_config
+    from src.framework.schema import load_toolbox_config
 
-    config = load_toolbox_config(config_dir)
+    config = load_toolbox_config(get_toolbox("spatial_analysis"))
 
-    assert config.toolbox.label == "YAML Analysis Toolbox"
-    assert config.toolbox.alias == "yamlanalysistoolbox"
+    assert config.toolbox.label == "Spatial Analysis"
+    assert config.toolbox.alias == "spatialanalysis"
     assert config.toolbox.version == "1.0.0"
-    assert len(config.tools) == 3  # buffer_analysis, clip_features, load_tool_metadata
+    assert len(config.tools) == 2  # buffer_analysis, clip_features
 
     # Check tool references
     tool_names = [t.name for t in config.tools]
@@ -22,19 +22,19 @@ def test_load_toolbox_config(config_dir):
 
 
 @pytest.mark.unit
-def test_tool_config_parameter_validation(config_dir):
+def test_tool_config_parameter_validation(get_tool):
     """Test that tool configs have valid parameter indices."""
-    from toolbox.framework.config.schema import load_tool_config
+    from src.framework.schema import load_tool_config
 
     # Buffer tool
-    buffer_config = load_tool_config(config_dir / "tools" / "buffer_analysis.yml")
+    buffer_config = load_tool_config(get_tool("spatial_analysis/buffer_analysis") / "tool.yml")
     assert len(buffer_config.parameters) == 5
     # Check all indices are present
     indices = {p.index for p in buffer_config.parameters}
     assert indices == {0, 1, 2, 3, 4}
 
     # Clip tool
-    clip_config = load_tool_config(config_dir / "tools" / "clip_features.yml")
+    clip_config = load_tool_config(get_tool("spatial_analysis/clip_features") / "tool.yml")
     assert len(clip_config.parameters) == 3
     # Check all indices are present
     indices = {p.index for p in clip_config.parameters}
@@ -44,7 +44,7 @@ def test_tool_config_parameter_validation(config_dir):
 @pytest.mark.unit
 def test_parameter_config_validation():
     """Test parameter configuration validation."""
-    from toolbox.framework.config.schema import FilterConfig, ParameterConfig
+    from src.framework.schema import FilterConfig, ParameterConfig
 
     # Valid parameter with range filter
     param = ParameterConfig(
@@ -75,11 +75,11 @@ def test_parameter_config_validation():
 
 
 @pytest.mark.unit
-def test_invalid_tool_config_duplicate_indices(config_dir, tmp_path):
+def test_invalid_tool_config_duplicate_indices(tmp_path):
     """Test that invalid tool config with duplicate indices fails validation."""
     import yaml
 
-    from toolbox.framework.config.schema import load_tool_config
+    from src.framework.schema import load_tool_config
 
     # Create invalid config with duplicate indices
     invalid_config = {

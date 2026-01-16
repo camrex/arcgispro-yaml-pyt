@@ -4,43 +4,95 @@
 
 This project implements a **YAML-driven ArcGIS Pro Python Toolbox framework** with a clean separation between reusable infrastructure and tool-specific business logic.
 
+## Key Concepts
+
+### Framework
+The reusable infrastructure layer (`src/framework/`) that provides:
+- Dynamic tool class generation from YAML
+- Base classes and schemas
+- Validation engine
+- No domain-specific logic
+
+**Purpose:** Pure machinery for YAML-driven toolbox generation
+
+### Tool
+A self-contained, standalone unit (`src/tools/{tool_name}/`) with:
+- `tool.yml` - Configuration
+- `execute.py` - Implementation
+- `test_*.py` - Tests
+
+**Example:** `load_tool_metadata/`
+
+**Use when:** Tool has no related dependencies or shared logic
+
+### Toolset
+A collection of related tools (`src/tools/{toolset_name}/`) organized as:
+- Multiple tool subdirectories (e.g., `buffer_analysis/`, `clip_features/`)
+- Shared `helpers/` directory for common utilities
+- Each tool still self-contained with own config/implementation/tests
+
+**Example:** `spatial_analysis/` (contains buffer_analysis, clip_features, shared geoprocessing helpers)
+
+**Use when:** 
+- Tools share helper functions or utilities
+- Tools are part of an orchestrated workflow
+- Related tools benefit from shared domain logic
+
+### Toolbox
+An ArcGIS Pro Python Toolbox (`.pyt` file in `src/toolboxes/`) that:
+- Registers tools from the tools/ directory
+- Has its own `toolbox.yml` configuration
+- Can include tools from multiple toolsets
+- Same tool can appear in multiple toolboxes
+
+**Example:** `spatial_analysis.pyt`, `utilities.pyt`
+
+**Relationship:** Many-to-many between toolboxes and tools
+
 ## Core Design Principles
 
-### 1. Zero Boilerplate
-Tools are generated dynamically at runtime from YAML configuration. No wrapper classes needed.
+### 1. Folder-per-Tool Organization
+Each tool is a self-contained module with:
+- Configuration (tool.yml)
+- Implementation (execute.py)
+- Tests (test_*.py)
+- Optional shared helpers
 
 ### 2. Framework/Tools Separation
-- **Framework** (`toolbox/framework/`) - Portable, reusable infrastructure
-- **Tools** (`toolbox/tools/`) - Application-specific business logic
+- **Framework** (`src/framework/`) - Flat, focused infrastructure (4 files)
+- **Tools** (`src/tools/`) - Self-contained tool modules
+- **Toolboxes** (`src/toolboxes/`) - Multiple .pyt files for organization
 
 ### 3. Configuration-Driven
 Everything is defined in YAML:
 - Tool parameters and their properties
 - Validation rules
 - Metadata and documentation
-- Toolbox structure
+- Toolbox structure and tool assignments
 
-### 4. Type-Safe
-Pydantic validates all YAML configurations against schemas at load time.
+### 4. Type-Safe and Auto-Discovered
+- Pydantic validates all YAML configurations at load time
+- Tests auto-discover all tools and toolboxes (no hardcoded fixtures)
 
 ## Architecture Layers
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ ArcGIS Pro                                              │
-│ • Discovers yaml_toolbox.pyt                            │
-│ • Reads tool classes from module-level variables        │
+│ • Discovers .pyt files in toolboxes/                    │
+│ • Loads tools from each toolbox independently           │
 └─────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────┐
-│ yaml_toolbox.pyt (Entry Point)                          │
-│ • Loads toolbox.yml                                     │
-│ • Uses ToolFactory to generate tool classes             │
-│ • Registers tools as module-level variables             │
+│ Toolboxes (src/toolboxes/)                          │
+│ • spatial_analysis/spatial_analysis.pyt                 │
+│ • utilities/utilities.pyt                               │
+│ • Each loads its own toolbox.yml                        │
+│ • Tools can appear in multiple toolboxes                │
 └─────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────┐
-│ Framework Layer (toolbox/framework/)                    │
+│ Framework Layer (src/framework/) - FLAT STRUCTURE   │
 │                                                          │
 │ ┌─────────────────────────────────────────────────┐    │
 │ │ factory.py - ToolFactory                        │    │
@@ -49,58 +101,48 @@ Pydantic validates all YAML configurations against schemas at load time.
 │ └─────────────────────────────────────────────────┘    │
 │                                                          │
 │ ┌─────────────────────────────────────────────────┐    │
-│ │ base/yaml_tool.py - YAMLTool                    │    │
-│ │ • Base class for all generated tools            │    │
+│ │ yaml_tool.py - YAMLTool Base Class              │    │
+│ │ • Base for all generated tools                  │    │
 │ │ • Implements getParameterInfo(), updateParameters()│
-│ │ • Delegates execution to implementation functions │  │
+│ │ • Delegates execution to tool's execute.py      │    │
 │ └─────────────────────────────────────────────────┘    │
 │                                                          │
 │ ┌─────────────────────────────────────────────────┐    │
-│ │ config/schema.py - Pydantic Schemas             │    │
+│ │ schema.py - Pydantic Schemas                    │    │
 │ │ • ToolboxConfig, ToolConfig, ParameterConfig    │    │
-│ │ • Validates YAML at load time                   │    │
+│ │ • Validates all YAML at load time               │    │
 │ └─────────────────────────────────────────────────┘    │
 │                                                          │
 │ ┌─────────────────────────────────────────────────┐    │
-│ │ validation/ - Validation Engine                 │    │
-│ │ • config_validator.py - YAML validation         │    │
-│ │ • runtime_validator.py - Parameter validation   │    │
-│ └─────────────────────────────────────────────────┘    │
-│                                                          │
-│ ┌─────────────────────────────────────────────────┐    │
-│ │ metadata/ - Metadata System                     │    │
-│ │ • generator.py - YAML → XML metadata            │    │
-│ │ • loader_tool.py - In-toolbox metadata loader   │    │
+│ │ validators.py - Validation Engine               │    │
+│ │ • YAML structure validation                     │    │
+│ │ • Runtime parameter validation                  │    │
 │ └─────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────┐
-│ Tools Layer (toolbox/tools/)                            │
+│ Tools Layer (src/tools/) - FOLDER-PER-TOOL          │
 │                                                          │
 │ ┌─────────────────────────────────────────────────┐    │
-│ │ config/toolbox.yml - Toolbox Registry           │    │
-│ │ • Toolbox metadata                              │    │
-│ │ • List of tools to load                         │    │
+│ │ spatial_analysis/ (Toolset Pattern)             │    │
+│ │ ├── buffer_analysis/                            │    │
+│ │ │   ├── tool.yml (config)                       │    │
+│ │ │   ├── execute.py (implementation)             │    │
+│ │ │   └── test_buffer.py (co-located test)        │    │
+│ │ ├── clip_features/                              │    │
+│ │ │   ├── tool.yml                                │    │
+│ │ │   ├── execute.py                              │    │
+│ │ │   └── test_clip.py                            │    │
+│ │ └── helpers/ (shared utilities)                 │    │
+│ │     └── geoprocessing.py                        │    │
 │ └─────────────────────────────────────────────────┘    │
 │                                                          │
 │ ┌─────────────────────────────────────────────────┐    │
-│ │ config/tools/*.yml - Tool Configurations        │    │
-│ │ • buffer_analysis.yml                           │    │
-│ │ • clip_features.yml                             │    │
-│ │ • One YAML file per tool                        │    │
-│ └─────────────────────────────────────────────────┘    │
-│                                                          │
-│ ┌─────────────────────────────────────────────────┐    │
-│ │ utils/ - Business Logic                          │    │
-│ │ • execute_buffer(parameters, messages)          │    │
-│ │ • execute_clip(parameters, messages)            │    │
-│ │ • Pure Python functions                         │    │
-│ └─────────────────────────────────────────────────┘    │
-│                                                          │
-│ ┌─────────────────────────────────────────────────┐    │
-│ │ helpers/ - Business Helpers                     │    │
-│ │ • geoprocessing.py - GP utilities               │    │
-│ │ • Domain-specific helper functions              │    │
+│ │ load_tool_metadata/ (Standalone Tool)           │    │
+│ │ ├── tool.yml                                    │    │
+│ │ ├── execute.py                                  │    │
+│ │ ├── metadata_generator.py (self-contained)     │    │
+│ │ └── test_metadata_loader.py                    │    │
 │ └─────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -125,15 +167,15 @@ def create_tool_class(tool_config: ToolConfig) -> type:
     )
 ```
 
-### YAMLTool (framework/base/yaml_tool.py)
+### YAMLTool (framework/yaml_tool.py)
 
 Base class that all generated tools inherit from:
 
 - `getParameterInfo()` - Converts YAML parameter configs to arcpy.Parameter objects
 - `updateParameters()` - Handles parameter dependencies and validation
-- `execute()` - Delegates to implementation function from YAML config
+- `execute()` - Delegates to implementation function from tool's execute.py
 
-### Configuration Schemas (framework/config/schema.py)
+### Configuration Schemas (framework/schema.py)
 
 Pydantic models ensure type safety:
 
@@ -151,37 +193,28 @@ class ToolConfig(BaseModel):
     label: str
     description: str
     category: str
+```python
+class ToolConfig(BaseModel):
+    name: str
     parameters: List[ParameterConfig]
-    implementation: str  # e.g., "toolbox.tools.utils.buffer:execute_buffer"
+    implementation_path: str  # e.g., "spatial_analysis/buffer_analysis"
 ```
 
-### Validation System
+### Validation System (framework/validators.py)
 
-**Config Validation** (`framework/validation/config_validator.py`):
-- Validates YAML structure against Pydantic schemas
-- Checks implementation functions exist
-- Ensures no duplicate tool names
-
-**Runtime Validation** (`framework/validation/runtime_validator.py`):
-- Validates parameter values during tool execution
+All validation logic in one module:
+- **Config validation** - YAML structure against Pydantic schemas
+- **Runtime validation** - Parameter values during execution
 - Checks required fields, data types, ranges
 - Applies custom validation rules from YAML
 
-### Metadata Generation (framework/metadata/)
-
-Converts YAML documentation to ArcGIS XML metadata:
-
-- Toolbox metadata from `toolbox.yml`
-- Tool metadata from individual tool YAMLs
-- Supports rich documentation: summary, usage, parameters, code samples, tags, credits
-
 ## Tool Execution Flow
 
-1. **User opens ArcGIS Pro** → Pro discovers `yaml_toolbox.pyt`
-2. **Pro imports pyt file** → Module-level code executes
-3. **Load toolbox.yml** → Get list of tools to load
+1. **User opens ArcGIS Pro** → Pro discovers .pyt files in toolboxes/
+2. **Pro imports .pyt file** → spatial_analysis.pyt or utilities.pyt
+3. **Load toolbox.yml** → Get list of tools to load for this toolbox
 4. **For each tool:**
-   - Load tool YAML (e.g., `buffer_analysis.yml`)
+   - Load tool.yml from tools/{implementation_path}/
    - Validate against Pydantic schema
    - Generate tool class using `ToolFactory`
    - Register as module-level variable
@@ -190,10 +223,16 @@ Converts YAML documentation to ArcGIS XML metadata:
    - Pro calls `getParameterInfo()` → Creates parameter UI
    - User enters values
    - Pro calls `updateParameters()` → Validates/updates parameters
-   - Pro calls `execute()` → YAMLTool delegates to implementation function
-   - Implementation function does the work using arcpy
+   - Pro calls `execute()` → YAMLTool delegates to tool's execute.py
+   - execute.py function does the work using arcpy
 
 ## Testing Strategy
+
+### Auto-Discovery (tests/conftest.py)
+- **Dynamic fixtures** - No hardcoded tool/toolbox names
+- Discovers all tools and toolboxes automatically
+- Factory fixtures: `get_toolbox(name)`, `get_tool(path)`
+- Add new tool → automatically tested
 
 ### Unit Tests (UV Environment)
 - **Mock arcpy** - No ArcGIS Pro required
@@ -210,22 +249,49 @@ See [testing.md](testing.md) for details.
 
 ## Design Decisions
 
-### Why Dynamic Tool Generation?
+### Why Folder-per-Tool?
 
-**Problem:** Traditional approach requires ~50 lines of boilerplate per tool
-**Solution:** Generate tool classes at runtime from YAML
+**Problem:** Large monolithic files hard to navigate and test
+**Solution:** Each tool is a self-contained module
 
 **Benefits:**
-- One YAML file per tool (no Python wrapper needed)
-- Changes to tool definition don't require code changes
-- Easy to add/modify tools
-- Clear separation of configuration and implementation
+- Clear ownership and boundaries
+- Co-located tests with implementation
+- Easy to add/remove tools
+- Supports toolset pattern (shared helpers)
 
-### Why Separate Framework and Tools?
+### Why Flattened Framework?
 
-**Portability:** Framework can be copied to start a new YAML toolbox project
-**Maintainability:** Business logic changes don't affect framework
-**Testability:** Framework and tools can be tested independently
+**Problem:** Over-nested folder structure with 1 file per folder
+**Solution:** 4 flat files in framework/
+
+**Benefits:**
+- Simpler imports (toolbox.framework.yaml_tool)
+- Easier to navigate
+- Reduced cognitive overhead
+- Still maintains clear separation of concerns
+
+### Why Multiple Toolboxes?
+
+**Problem:** Single monolithic toolbox hard to organize
+**Solution:** Multiple .pyt files in toolboxes/ directory
+
+**Benefits:**
+- Logical grouping (spatial_analysis, utilities, etc.)
+- Same tool can appear in multiple toolboxes
+- Each team/domain can have its own toolbox
+- Easier to distribute subsets of tools
+
+### Why Auto-Discovery for Tests?
+
+**Problem:** Hardcoded fixtures break when adding tools
+**Solution:** Dynamic discovery and factory fixtures
+
+**Benefits:**
+- Add tool → automatically tested
+- No conftest.py updates needed
+- Validates ALL tools consistently
+- Scales effortlessly
 
 ### Why Pydantic?
 
@@ -240,23 +306,32 @@ ArcGIS Pro discovers tools by inspecting module-level variables. Dynamic generat
 
 ## Extension Points
 
+### Adding New Tools
+
+**Option A: Standalone Tool**
+1. Create `src/tools/my_tool/` directory
+2. Add `tool.yml`, `execute.py`, `test_my_tool.py`
+3. Add to toolbox's `toolbox.yml`
+
+**Option B: Tool in Toolset**
+1. Create `src/tools/my_toolset/my_tool/` directory
+2. Add `tool.yml`, `execute.py`, `test_my_tool.py`
+3. Share helpers via `my_toolset/helpers/`
+4. Add to toolbox's `toolbox.yml`
+
+Auto-discovery will find and test it automatically.
+
 ### Adding New Parameter Types
 
-1. Update `ParameterConfig` schema in `framework/config/schema.py`
-2. Update parameter creation logic in `base/yaml_tool.py`
-3. Add validation logic in `validation/runtime_validator.py`
+1. Update `ParameterConfig` schema in `framework/schema.py`
+2. Update parameter creation logic in `framework/yaml_tool.py`
+3. Add validation logic in `framework/validators.py`
 
 ### Adding New Validation Rules
 
 1. Add validation config to `ParameterConfig` schema
-2. Implement validation logic in `validation/runtime_validator.py`
+2. Implement validation logic in `framework/validators.py`
 3. Document in [configuration-guide.md](../configuration-guide.md)
-
-### Custom Metadata Elements
-
-1. Update schema in `framework/config/schema.py`
-2. Update XML generation in `metadata/generator.py`
-3. Document in [metadata-guide.md](../metadata-guide.md)
 
 ## Future Enhancements
 
@@ -275,3 +350,4 @@ Potential areas for expansion:
 - Pydantic documentation
 - Python `type()` and metaclasses
 - Design patterns: Factory, Template Method
+

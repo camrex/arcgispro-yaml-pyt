@@ -45,7 +45,7 @@ ty .
 
 1. Activate the ArcGIS Pro environment
 2. Open ArcGIS Pro
-3. Add the toolbox: `toolbox/yaml_toolbox.pyt`
+3. Add the toolbox: `src/toolboxes/spatial_analysis/spatial_analysis.pyt` or `src/toolboxes/utilities/utilities.pyt`
 
 ## Testing
 
@@ -60,61 +60,107 @@ See [docs/development/testing.md](docs/development/testing.md) for details.
 
 ```
 arcgispro-yaml-pyt/
-├── toolbox/
-│   ├── framework/              # Reusable framework (portable)
-│   │   ├── factory.py         # Dynamic tool generation
-│   │   ├── base/              # Base classes
-│   │   ├── config/            # Pydantic schemas
-│   │   ├── validation/        # Validation engine
-│   │   ├── metadata/          # XML metadata generation
-│   │   └── scripts/           # Dev scripts
-│   └── tools/                  # Tool-specific business logic
-│       ├── config/            # YAML configurations
-│       ├── utils/             # Tool execution functions
-│       └── helpers/           # Business helpers
-├── tests/                      # Test suite
-├── docs/                       # Documentation
-│   ├── configuration-guide.md
-│   ├── metadata-guide.md
-│   ├── quickstart.md
-│   └── development/           # Developer docs
-│       ├── setup.md
-│       ├── testing.md
-│       └── architecture.md
-└── pyproject.toml
+├── src/
+│   ├── framework/                    # Reusable framework
+│   │   ├── factory.py               # Dynamic tool generation
+│   │   ├── yaml_tool.py             # Base class
+│   │   ├── schema.py                # Pydantic schemas
+│   │   └── validators.py            # Validation
+│   │
+│   ├── tools/                        # Tool implementations
+│   │   ├── spatial_analysis/        # Toolset (related tools)
+│   │   │   ├── buffer_analysis/    # Self-contained tool
+│   │   │   ├── clip_features/
+│   │   │   └── helpers/            # Shared helpers
+│   │   └── load_tool_metadata/     # Standalone tool
+│   │
+│   └── toolboxes/                   # Multiple .pyt files
+│       ├── spatial_analysis/        # spatial_analysis.pyt
+│       └── utilities/               # utilities.pyt
+│
+├── tests/                            # Framework tests + auto-discovery
+├── scripts/                          # Validation scripts
+└── docs/                             # Documentation
 ```
+
+## Key Concepts
+
+Before contributing, understand these core concepts:
+
+### Framework
+The reusable infrastructure layer (`src/framework/`) that provides:
+- Dynamic tool class generation from YAML
+- Validation engine and schemas
+- No domain-specific business logic
+- Pure machinery for toolbox generation
+
+### Tool
+A self-contained, standalone unit with its own directory:
+- Location: `src/tools/{tool_name}/`
+- Contains: `tool.yml`, `execute.py`, `test_*.py`
+- Example: `load_tool_metadata/`
+- **Use when:** Tool has no dependencies or shared logic with other tools
+
+### Toolset
+A collection of related tools organized together:
+- Location: `src/tools/{toolset_name}/`
+- Contains: Multiple tool subdirectories + shared `helpers/`
+- Example: `spatial_analysis/` with `buffer_analysis/`, `clip_features/`, and shared geoprocessing helpers
+- **Use when:** 
+  - Tools share helper functions or utilities
+  - Tools are part of an orchestrated workflow
+  - Related tools benefit from shared domain logic
+
+### Toolbox
+An ArcGIS Pro Python Toolbox (`.pyt` file):
+- Location: `src/toolboxes/{toolbox_name}/`
+- Contains: `{toolbox_name}.pyt` and `toolbox.yml`
+- Registers tools from the tools/ directory
+- Many-to-many: Same tool can appear in multiple toolboxes
+- Examples: `spatial_analysis.pyt`, `utilities.pyt`
 
 ## Architecture Principles
 
-### Framework (toolbox/framework/)
-- **Reusable, portable infrastructure**
-- Zero boilerplate - tools generated dynamically at runtime
-- YAML schema validation (Pydantic)
-- Runtime validation engine
-- Metadata XML generation
-- Framework doesn't depend on Tools (clean separation)
+### Framework (src/framework/)
+- **Flat, focused structure** - No nested subdirectories
+- **Dynamic tool generation** - Zero boilerplate classes
+- **Pure machinery** - No domain logic
+- Files: `factory.py`, `yaml_tool.py`, `schema.py`, `validators.py`
 
-### Tools (toolbox/tools/)
-- **Application-specific business logic**
-- Tool configurations (YAML files)
-- Implementation functions (execute_buffer, execute_clip, etc.)
+### Tools (src/tools/)
+- **Folder-per-tool** - Each tool is self-contained
+- **Co-located tests** - Tests live with the tool
+- **Toolset pattern** - Related tools can share helpers
+- Examples: `spatial_analysis/buffer_analysis/`, `load_tool_metadata/`
+
+### Toolboxes (src/toolboxes/)
+- **Multiple .pyt files** - Separate toolboxes for organization
+- **Many-to-many** - Same tool can be in multiple toolboxes
+- Each toolbox has its own `toolbox.yml`
 - Business-specific helpers
 
 ## Making Changes
 
 ### Adding a New Tool
 
-1. Create YAML configuration in `toolbox/tools/config/tools/`
-2. Register tool in `toolbox/tools/config/toolbox.yml`
-3. Implement execution function in `toolbox/tools/utils/`
-4. Add tests in `tests/`
-5. Generate metadata: `python toolbox/framework/scripts/validate_config.py`
+**Option A: Standalone Tool**
+1. Create `src/tools/{tool_name}/` directory
+2. Add `tool.yml`, `execute.py`, `test_{tool_name}.py`
+3. Register in `src/toolboxes/{toolbox_name}/toolbox.yml`
+
+**Option B: Tool in Toolset**
+1. Create `src/tools/{toolset}/{tool_name}/` directory
+2. Add `tool.yml`, `execute.py`, `test_{tool_name}.py`
+3. Share helpers via `{toolset}/helpers/`
+4. Register in `src/toolboxes/{toolbox_name}/toolbox.yml`
+
+Auto-discovery will find and test it automatically!
 
 See [docs/configuration-guide.md](docs/configuration-guide.md) for complete details.
 
 ### Modifying the Framework
 
-1. Make changes in `toolbox/framework/`
+1. Make changes in `src/framework/`
 2. Ensure all existing tests pass
 3. Add new tests for new functionality
 4. Update documentation if needed
@@ -155,3 +201,4 @@ See [docs/configuration-guide.md](docs/configuration-guide.md) for complete deta
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.
+
