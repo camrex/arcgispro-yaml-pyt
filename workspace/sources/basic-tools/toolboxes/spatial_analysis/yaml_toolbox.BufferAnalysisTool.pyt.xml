@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<metadata xml:lang="en"><Esri><CreaDate>20260115</CreaDate><CreaTime>16363800</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce></Esri><tool name="BufferAnalysisTool" displayname="Buffer Analysis" toolboxalias="yamlanalysistoolbox" xmlns=""><arcToolboxHelpPath>c:\program files\arcgis\pro\Resources\Help\gp</arcToolboxHelpPath><parameters><param name="input_features" displayname="Input Features" type="Required" direction="Input" datatype="GPFeatureLayer" expression="input_features"><dialogReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The input point, line, or polygon features to be buffered. The features 
+can be from a feature class, shapefile, or layer in your map.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</dialogReference><pythonReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;A string representing the path to the feature class, shapefile, or layer 
+name. Example: r&amp;quot;C:\Data\cities.shp&amp;quot; or &amp;quot;cities_layer&amp;quot;&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</pythonReference></param><param name="buffer_distance" displayname="Buffer Distance" type="Required" direction="Input" datatype="GPDouble" expression="buffer_distance"><dialogReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The distance from the input features within which buffer zones are created. 
+Must be a positive number. Use the Buffer Units parameter to specify the 
+unit of measurement.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</dialogReference><pythonReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;A numeric value (int or float) representing the buffer distance. Example: 
+100, 250.5, 1000&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</pythonReference></param><param name="buffer_units" displayname="Buffer Units" type="Required" direction="Input" datatype="GPString" expression="buffer_units"><dialogReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The linear unit to be used for the buffer distance. Choose from meters, 
+feet, kilometers, or miles based on the scale of your analysis.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</dialogReference><pythonReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;A string value, one of: &amp;quot;meters&amp;quot;, &amp;quot;feet&amp;quot;, &amp;quot;kilometers&amp;quot;, or &amp;quot;miles&amp;quot;. 
+Example: &amp;quot;meters&amp;quot;&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</pythonReference></param><param name="dissolve_output" displayname="Dissolve Output" type="Optional" direction="Input" datatype="GPBoolean" expression="dissolve_output"><dialogReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;Specifies whether overlapping buffers will be dissolved into single features. 
+When checked, overlapping or adjacent buffers are combined. When unchecked, 
+each input feature creates a separate buffer (may overlap).&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</dialogReference><pythonReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;A boolean value. True dissolves overlapping buffers, False keeps them 
+separate. Example: True or False&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</pythonReference></param><param name="output_features" displayname="Output Features" type="Required" direction="Output" datatype="GPFeatureLayer" expression="output_features"><dialogReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The output feature class that will contain the buffer polygons. Specify 
+a path to a new feature class or geodatabase feature class.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</dialogReference><pythonReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;A string representing the output path. Example: r&amp;quot;C:\Data\output.gdb\buffers&amp;quot;&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</pythonReference></param></parameters><summary>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;Creates buffer polygons around input features at a specified distance.
+Buffers are useful for proximity analysis, creating service areas, 
+or establishing zones of influence around geographic features.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</summary><usage>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The Buffer Analysis tool creates buffer polygons at a specified distance&lt;BR/&gt;around input point, line, or polygon features. You can specify the buffer&lt;BR/&gt;distance in various units (meters, feet, kilometers, miles) and optionally&lt;BR/&gt;dissolve overlapping buffers into single features.&lt;/SPAN&gt;&lt;/P&gt;&lt;P&gt;&lt;SPAN&gt;Tips and Best Practices:&lt;BR/&gt;- Buffer distances must be positive numbers&lt;BR/&gt;- Use appropriate units for your analysis scale (meters for local analysis, kilometers for regional analysis)&lt;BR/&gt;- Enable &amp;quot;Dissolve Output&amp;quot; when you want to merge overlapping buffers into contiguous zones&lt;BR/&gt;- Ensure your input features have a valid spatial reference system&lt;BR/&gt;- For large datasets, consider enabling background processing&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</usage><scriptExamples><scriptExample><title>Basic Buffer with Default Settings</title><para>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;Create a 100-meter buffer around city points with dissolved output.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</para><code>import arcpy
+
+# Set input parameters
+input_fc = r"C:\Data\cities.shp"
+output_fc = r"C:\Data\output.gdb\city_buffers"
+distance = 100
+units = "meters"
+dissolve = True
+
+# Run buffer analysis
+arcpy.yamlanalysistoolbox.BufferAnalysis(
+    input_fc, distance, units, dissolve, output_fc
+)
+
+print(f"Buffer analysis complete: {output_fc}")</code></scriptExample><scriptExample><title>Multiple Distance Buffers</title><para>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;Create buffers at multiple distances to analyze proximity zones.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</para><code>import arcpy
+
+input_fc = r"C:\Data\facilities.shp"
+distances = [100, 250, 500]  # meters
+
+for distance in distances:
+    output_fc = rf"C:\Data\output.gdb\buffer_{distance}m"
+    arcpy.yamlanalysistoolbox.BufferAnalysis(
+        input_fc, distance, "meters", True, output_fc
+    )
+    print(f"Created {distance}m buffer: {output_fc}")</code></scriptExample><scriptExample><title>Non-Dissolved Buffers with Different Units</title><para>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;Create individual buffers in miles without dissolving overlaps.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</para><code>import arcpy
+
+# Create 5-mile buffers around each school (no dissolve)
+arcpy.yamlanalysistoolbox.BufferAnalysis(
+    input_features=r"C:\Data\schools.shp",
+    buffer_distance=5,
+    buffer_units="miles",
+    dissolve_output=False,
+    output_features=r"C:\Data\output.gdb\school_service_areas"
+)</code></scriptExample></scriptExamples></tool><dataIdInfo><idCitation><resTitle>Buffer Analysis</resTitle></idCitation><searchKeys><keyword>buffer</keyword><keyword>proximity</keyword><keyword>analysis</keyword><keyword>spatial analysis</keyword><keyword>geoprocessing</keyword></searchKeys><idCredit>Example tool demonstrating YAML-based configuration for ArcGIS Pro Python Toolbox. 
+Based on standard ArcGIS Buffer analysis operations.
+</idCredit><resConst><Consts><useLimit>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;This tool is provided for educational and demonstration purposes. Users may&lt;BR/&gt;apply this tool to their analysis workflows subject to:&lt;BR/&gt;- No warranty for accuracy or fitness for specific applications&lt;BR/&gt;- User responsibility for validating results against authoritative sources&lt;BR/&gt;- Compliance with organizational data usage and licensing policies&lt;BR/&gt;- Not certified for regulatory or legal boundary determinations&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</useLimit></Consts></resConst></dataIdInfo><distInfo><distributor><distorFormat><formatName>ArcToolbox Tool</formatName></distorFormat></distributor></distInfo><mdHrLv><ScopeCd value="005" /></mdHrLv><mdDateSt Sync="TRUE">20260115</mdDateSt></metadata>

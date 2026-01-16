@@ -1,0 +1,28 @@
+# Utilities Toolbox Configuration
+
+toolbox:
+  label: "Toolbox Utilities"
+  alias: "toolboxutilities"
+  description: "Utility tools for managing toolbox metadata and configuration"
+  version: "1.0.0"
+
+documentation:
+  summary: |
+    A toolbox containing utility tools for managing and maintaining toolbox metadata.
+  description: |
+    This toolbox provides utility tools that help manage the toolbox framework itself,
+    including tools for reloading metadata from YAML configuration files.
+  tags:
+    - utilities
+    - metadata
+    - maintenance
+  credits: |
+    YAML-based Python Toolbox Framework Example
+  use_limitations: |
+    Provided as-is for demonstration purposes.
+
+# Tool registry
+tools:
+  - name: load_tool_metadata
+    enabled: true
+    config: "../../tools/load_tool_metadata/tool.yml"

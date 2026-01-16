@@ -1,21 +1,23 @@
 version: '1.0'
+
 settings:
-  workspace_path: E:\DevProjects\arcgispro-yaml-pyt\workspace
+  workspace_path: e:\DevProjects\arcgispro-yaml-pyt\workspace
   auto_create_workspace: true
   auto_sync: true
+
 sources:
 - id: basic-tools
   name: Basic Tools
   type: local
-  branch: main
-  path: examples\sources\basic-tools
+  path: e:\DevProjects\arcgispro-yaml-pyt\workspace\sources\basic-tools
   enabled: true
-  last_sync: '2026-01-16T23:42:38.926414Z'
+  last_sync: '2026-01-16T23:09:03.595213Z'
   discovered_tools: 3
+
 toolboxes:
 - id: my-spatial-tools
   name: My Spatial Analysis Tools
-  path: my_spatial_tools.pyt
+  path: e:\DevProjects\arcgispro-yaml-pyt\workspace\toolboxes\my_spatial_tools.pyt
   description: Custom toolbox with selected spatial analysis tools
   tools:
   - source_id: basic-tools

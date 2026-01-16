@@ -27,6 +27,16 @@ class CatalogSettings(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    # Workspace configuration
+    workspace_path: Path | None = Field(
+        default=None,
+        description="Path to workspace directory (defaults to ./workspace if not specified)",
+    )
+    auto_create_workspace: bool = Field(
+        default=True, description="Automatically create workspace directories if missing"
+    )
+
+    # ArcGIS Pro configuration
     arcgis_pro_path: Path | None = Field(
         default=None,
         description="Path to ArcGIS Pro installation (auto-detected if not specified)",
@@ -216,3 +226,23 @@ class Catalog(BaseModel):
         if not toolbox:
             return []
         return [tool for tool in toolbox.tools if tool.enabled]
+
+    def get_workspace_path(self, base_path: Path | None = None) -> Path:
+        """Get the workspace path, with fallback to default."""
+        if self.settings and self.settings.workspace_path:
+            return self.settings.workspace_path
+
+        # Fallback to ./workspace relative to base_path or current directory
+        if base_path:
+            return base_path / "workspace"
+        return Path.cwd() / "workspace"
+
+    def get_toolbox_output_path(self, base_path: Path | None = None) -> Path:
+        """Get the path where generated toolbox files should be stored."""
+        workspace = self.get_workspace_path(base_path)
+        return workspace / "toolboxes"
+
+    def get_sources_path(self, base_path: Path | None = None) -> Path:
+        """Get the path where source repositories should be stored."""
+        workspace = self.get_workspace_path(base_path)
+        return workspace / "sources"

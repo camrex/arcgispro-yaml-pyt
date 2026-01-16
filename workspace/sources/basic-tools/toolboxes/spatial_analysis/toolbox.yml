@@ -1,0 +1,35 @@
+# Spatial Analysis Toolbox Configuration
+
+toolbox:
+  label: "Spatial Analysis"
+  alias: "spatialanalysis"
+  description: "Spatial analysis tools for buffer and clip operations"
+  version: "1.0.0"
+
+documentation:
+  summary: |
+    A toolbox focused on spatial analysis operations including buffer creation
+    and feature clipping.
+  description: |
+    This toolbox provides essential spatial analysis tools for working with
+    geographic data. Includes tools for creating buffer zones around features
+    and clipping features to a specified boundary.
+  tags:
+    - spatial analysis
+    - geoprocessing
+    - buffer
+    - clip
+  credits: |
+    YAML-based Python Toolbox Framework Example
+  use_limitations: |
+    Provided as-is for demonstration purposes.
+
+# Tool registry
+tools:
+  - name: buffer_analysis
+    enabled: true
+    config: "../../tools/spatial_analysis/buffer_analysis/tool.yml"
+  
+  - name: clip_features
+    enabled: true
+    config: "../../tools/spatial_analysis/clip_features/tool.yml"

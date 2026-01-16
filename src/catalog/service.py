@@ -24,6 +24,7 @@ from src.catalog.models import (
     Toolbox,
     ToolReference,
 )
+from src.catalog.workspace import WorkspaceService
 
 
 class CatalogError(Exception):
@@ -49,19 +50,37 @@ class CatalogService:
 
     DEFAULT_VERSION = "1.0"
 
-    def __init__(self, catalog_path: Path | None = None):
+    def __init__(self, catalog_path: Path | None = None, workspace_path: Path | None = None):
         """
         Initialize catalog service.
 
         Args:
-            catalog_path: Path to catalog.yml. If None, uses default location
-                         (~/.arcgis_yaml_toolbox/catalog.yml)
+            catalog_path: Path to catalog.yml. If None, uses workspace default
+            workspace_path: Path to workspace directory. If None, uses default
         """
-        if catalog_path is None:
-            catalog_path = Path.home() / ".arcgis_yaml_toolbox" / "catalog.yml"
+        self.workspace_service = WorkspaceService()
 
-        self.catalog_path = Path(catalog_path)
+        # Initialize workspace
+        if workspace_path:
+            self.workspace_path = workspace_path
+        else:
+            self.workspace_path = self.workspace_service.get_default_workspace_path()
+
+        # Ensure workspace exists
+        self.workspace_service.initialize_workspace(self.workspace_path)
+
+        # Set catalog path
+        if catalog_path:
+            self.catalog_path = Path(catalog_path)
+        else:
+            self.catalog_path = self.workspace_service.get_default_catalog_path(self.workspace_path)
+
         self._catalog: Catalog | None = None
+
+    @property
+    def workspace(self) -> Path:
+        """Get the workspace path."""
+        return self.workspace_path
 
     def load(self) -> Catalog:
         """
@@ -106,6 +125,13 @@ class CatalogService:
         if catalog is None:
             raise CatalogError("No catalog to save")
 
+        # Update catalog settings with current workspace path if not set
+        if not catalog.settings:
+            catalog.settings = CatalogSettings()
+
+        if not catalog.settings.workspace_path:
+            catalog.settings.workspace_path = self.workspace_path
+
         # Create backup if file exists
         if backup and self.catalog_path.exists():
             self._create_backup()
@@ -115,6 +141,10 @@ class CatalogService:
 
         # Convert to dict and save (use mode="json" to serialize enums and Paths)
         data = catalog.model_dump(mode="json", exclude_none=True)
+
+        # Convert Path objects to strings for YAML
+        if "settings" in data and "workspace_path" in data["settings"]:
+            data["settings"]["workspace_path"] = str(data["settings"]["workspace_path"])
 
         with open(self.catalog_path, "w", encoding="utf-8") as f:
             yaml.safe_dump(
