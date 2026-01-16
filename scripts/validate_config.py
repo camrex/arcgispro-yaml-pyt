@@ -13,31 +13,31 @@ def validate_all_configs():
 
     print("Validating toolbox configurations...")
     print("=" * 60)
-    
+
     all_valid = True
-    
+
     # Find all toolboxes
     toolboxes = [d for d in toolboxes_dir.iterdir() if d.is_dir() and (d / "toolbox.yml").exists()]
-    
+
     if not toolboxes:
         print("✗ No toolboxes found!")
         return False
-    
+
     for toolbox_dir in toolboxes:
         print(f"\nToolbox: {toolbox_dir.name}")
         print("-" * 60)
-        
+
         try:
             toolbox_config = load_toolbox_config(toolbox_dir)
             print(f"✓ {toolbox_config.toolbox.label} ({toolbox_config.toolbox.alias})")
             print(f"  Version: {toolbox_config.toolbox.version}")
             print(f"  Tools: {len(toolbox_config.tools)} registered")
-            
+
             # Validate each tool referenced in this toolbox
             for tool_ref in toolbox_config.tools:
                 # config path is relative to the toolbox.yml file
                 tool_config_path = toolbox_dir / tool_ref.config
-                
+
                 try:
                     tool_config = load_tool_config(tool_config_path)
                     status = "✓" if tool_ref.enabled else "○"
@@ -48,7 +48,7 @@ def validate_all_configs():
                 except Exception as e:
                     print(f"    ✗ {tool_ref.name}: {e}")
                     all_valid = False
-                    
+
         except Exception as e:
             print(f"✗ Toolbox validation failed: {e}")
             all_valid = False
