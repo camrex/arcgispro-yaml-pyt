@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<metadata xml:lang="en"><Esri><CreaDate>20260115</CreaDate><CreaTime>16363800</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce></Esri><tool name="ClipFeaturesTool" displayname="Clip Features" toolboxalias="yamlanalysistoolbox" xmlns=""><arcToolboxHelpPath>c:\program files\arcgis\pro\Resources\Help\gp</arcToolboxHelpPath><parameters><param name="input_features" displayname="Input Features" type="Required" direction="Input" datatype="GPFeatureLayer" expression="input_features"><dialogReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The features to be clipped. These can be point, line, or polygon features 
+from a feature class, shapefile, or layer. Only features that intersect 
+or fall within the clip features boundary will be extracted.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</dialogReference><pythonReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;A string representing the path to the feature class, shapefile, or layer 
+name. Example: r&amp;quot;C:\Data\roads.shp&amp;quot; or &amp;quot;roads_layer&amp;quot;&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</pythonReference></param><param name="clip_features" displayname="Clip Features" type="Required" direction="Input" datatype="GPFeatureLayer" expression="clip_features"><dialogReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The boundary features used to clip the input features. Typically a polygon 
+feature class representing a study area, administrative boundary, or area 
+of interest. Features can be points, lines, or polygons.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</dialogReference><pythonReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;A string representing the path to the clip feature class or layer. 
+Example: r&amp;quot;C:\Data\study_area.shp&amp;quot; or &amp;quot;boundary_layer&amp;quot;&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</pythonReference></param><param name="output_features" displayname="Output Features" type="Required" direction="Output" datatype="GPFeatureLayer" expression="output_features"><dialogReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The output feature class that will contain the clipped features. This 
+will have the same geometry type as the input features and will inherit 
+all attributes. Specify a path to a new feature class.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</dialogReference><pythonReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;A string representing the output path. Example: r&amp;quot;C:\Data\output.gdb\clipped_roads&amp;quot;&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</pythonReference></param></parameters><summary>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;Extracts input features that overlap the clip features boundary. This tool 
+operates like a cookie cutter, cutting out portions of the input features 
+that fall within the clip features extent.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</summary><usage>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The Clip Features tool extracts features from the input that fall within the&lt;BR/&gt;area defined by the clip features. The tool preserves all attributes from&lt;BR/&gt;the input features and outputs features in the spatial reference of the input.&lt;/SPAN&gt;&lt;/P&gt;&lt;P&gt;&lt;SPAN&gt;Tips and Best Practices:&lt;BR/&gt;- Input and clip features must have overlapping spatial extents&lt;BR/&gt;- The clip features can be points, lines, or polygons&lt;BR/&gt;- When using polygon clip features, only features within or intersecting the boundary are extracted&lt;BR/&gt;- Attributes from the input features are preserved in the output&lt;BR/&gt;- The output spatial reference matches the input features&lt;BR/&gt;- For optimal performance with large datasets, ensure your data has spatial indexes&lt;BR/&gt;- Consider using the clip boundary that best matches your analysis needs&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</usage><scriptExamples><scriptExample><title>Basic Clip Operation</title><para>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;Clip roads to a city boundary to extract only roads within the city limits.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</para><code>import arcpy
+
+# Set input parameters
+roads = r"C:\Data\county_roads.shp"
+city_boundary = r"C:\Data\city_limits.shp"
+output = r"C:\Data\output.gdb\city_roads"
+
+# Run clip operation
+arcpy.yamlanalysistoolbox.ClipFeatures(roads, city_boundary, output)
+
+print(f"Clip complete: {output}")</code></scriptExample><scriptExample><title>Multiple Feature Classes to Same Boundary</title><para>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;Clip multiple feature classes to a common study area boundary.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</para><code>import arcpy
+
+study_area = r"C:\Data\study_area.shp"
+input_layers = [
+    (r"C:\Data\parcels.shp", "parcels_clipped"),
+    (r"C:\Data\roads.shp", "roads_clipped"),
+    (r"C:\Data\buildings.shp", "buildings_clipped")
+]
+
+output_gdb = r"C:\Data\output.gdb"
+
+for input_fc, output_name in input_layers:
+    output_fc = f"{output_gdb}\\{output_name}"
+    arcpy.yamlanalysistoolbox.ClipFeatures(
+        input_fc, study_area, output_fc
+    )
+    print(f"Clipped {output_name}")</code></scriptExample><scriptExample><title>Clip with Selected Features</title><para>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;Clip features using a subset of clip features (selected features only).&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</para><code>import arcpy
+
+# Create a layer with selected features
+arcpy.management.MakeFeatureLayer(
+    r"C:\Data\watersheds.shp", 
+    "watershed_layer",
+    "AREA_SQ_MI &gt; 100"  # Select large watersheds only
+)
+
+# Clip streams to the large watersheds
+arcpy.yamlanalysistoolbox.ClipFeatures(
+    input_features=r"C:\Data\streams.shp",
+    clip_features="watershed_layer",
+    output_features=r"C:\Data\output.gdb\clipped_streams"
+)
+
+print("Clipped streams to large watersheds")</code></scriptExample></scriptExamples></tool><dataIdInfo><idCitation><resTitle>Clip Features</resTitle></idCitation><searchKeys><keyword>clip</keyword><keyword>extract</keyword><keyword>analysis</keyword><keyword>overlay</keyword><keyword>geoprocessing</keyword><keyword>spatial analysis</keyword></searchKeys><idCredit>Example tool demonstrating YAML-based configuration for ArcGIS Pro Python Toolbox. 
+Based on standard ArcGIS Clip analysis operations.
+</idCredit><resConst><Consts><useLimit>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;This tool is provided for educational and demonstration purposes. Users may&lt;BR/&gt;apply this tool to their analysis workflows subject to:&lt;BR/&gt;- No warranty for accuracy or fitness for specific applications&lt;BR/&gt;- User responsibility for validating results against authoritative sources&lt;BR/&gt;- Compliance with organizational data usage and licensing policies&lt;BR/&gt;- Not certified for regulatory or legal boundary determinations&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</useLimit></Consts></resConst></dataIdInfo><distInfo><distributor><distorFormat><formatName>ArcToolbox Tool</formatName></distorFormat></distributor></distInfo><mdHrLv><ScopeCd value="005" /></mdHrLv><mdDateSt Sync="TRUE">20260115</mdDateSt></metadata>

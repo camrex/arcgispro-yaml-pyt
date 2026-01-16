@@ -1,0 +1,1 @@
+"""Metadata generation and management."""

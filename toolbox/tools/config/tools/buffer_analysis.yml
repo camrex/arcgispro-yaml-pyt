@@ -1,0 +1,227 @@
+# =============================================================================
+# Buffer Analysis Tool Configuration
+# =============================================================================
+# Purpose:
+#   Creates buffer polygons around input features at a specified distance.
+#   Supports multiple distance units and optional output dissolution.
+#
+# Author: YAML Toolbox Example
+# Created: 2026-01-15
+# Last Modified: 2026-01-15
+#
+# Notes:
+#   - Buffer distance must be positive (validated at runtime)
+#   - Supports meters, feet, kilometers, and miles
+#   - Dissolve option combines overlapping buffers into single features
+# =============================================================================
+
+# Tool metadata
+tool:
+  name: buffer_analysis
+  label: "Buffer Analysis"
+  description: "Create buffer polygons around input features"
+  category: "Analysis"
+  canRunInBackground: true
+
+# Python implementation
+implementation:
+  executeFunction: "toolbox.tools.utils.buffer.execute_buffer"
+
+# Parameter definitions
+parameters:
+  - name: input_features
+    index: 0
+    displayName: "Input Features"
+    datatype: GPFeatureLayer
+    parameterType: Required
+    direction: Input
+    description: "The input features to buffer"
+  
+  - name: buffer_distance
+    index: 1
+    displayName: "Buffer Distance"
+    datatype: GPDouble
+    parameterType: Required
+    direction: Input
+    defaultValue: 100
+    description: "The distance to buffer"
+    filter:
+      type: Range
+      min: 0
+      max: 10000
+    validation:
+      - type: greater_than
+        value: 0
+        message: "Buffer distance must be positive"
+  
+  - name: buffer_units
+    index: 2
+    displayName: "Buffer Units"
+    datatype: GPString
+    parameterType: Required
+    direction: Input
+    defaultValue: "meters"
+    description: "The unit of measurement"
+    filter:
+      type: ValueList
+      values:
+        - meters
+        - feet
+        - kilometers
+        - miles
+    validation:
+      - type: one_of
+        values: ["meters", "feet", "kilometers", "miles"]
+        message: "Invalid unit of measurement"
+  
+  - name: dissolve_output
+    index: 3
+    displayName: "Dissolve Output"
+    datatype: GPBoolean
+    parameterType: Optional
+    direction: Input
+    defaultValue: true
+    description: "Dissolve overlapping buffers"
+  
+  - name: output_features
+    index: 4
+    displayName: "Output Features"
+    datatype: GPFeatureLayer
+    parameterType: Required
+    direction: Output
+    description: "The output buffer features"
+
+# Documentation metadata for ArcGIS Pro
+documentation:
+  summary: |
+    Creates buffer polygons around input features at a specified distance.
+    Buffers are useful for proximity analysis, creating service areas, 
+    or establishing zones of influence around geographic features.
+  
+  usage: |
+    The Buffer Analysis tool creates buffer polygons at a specified distance 
+    around input point, line, or polygon features. You can specify the buffer 
+    distance in various units (meters, feet, kilometers, miles) and optionally 
+    dissolve overlapping buffers into single features.
+    
+    Tips and Best Practices:
+    - Buffer distances must be positive numbers
+    - Use appropriate units for your analysis scale (meters for local analysis, 
+      kilometers for regional analysis)
+    - Enable "Dissolve Output" when you want to merge overlapping buffers into 
+      contiguous zones
+    - Ensure your input features have a valid spatial reference system
+    - For large datasets, consider enabling background processing
+  
+  tags:
+    - buffer
+    - proximity
+    - analysis
+    - spatial analysis
+    - geoprocessing
+  
+  credits: |
+    Example tool demonstrating YAML-based configuration for ArcGIS Pro Python Toolbox. 
+    Based on standard ArcGIS Buffer analysis operations.
+  
+  use_limitations: |
+    This tool is provided for educational and demonstration purposes. Users may 
+    apply this tool to their analysis workflows subject to:
+    - No warranty for accuracy or fitness for specific applications
+    - User responsibility for validating results against authoritative sources
+    - Compliance with organizational data usage and licensing policies
+    - Not certified for regulatory or legal boundary determinations
+  
+  parameter_syntax:
+    input_features:
+      dialog_explanation: |
+        The input point, line, or polygon features to be buffered. The features 
+        can be from a feature class, shapefile, or layer in your map.
+      scripting_explanation: |
+        A string representing the path to the feature class, shapefile, or layer 
+        name. Example: r"C:\Data\cities.shp" or "cities_layer"
+    
+    buffer_distance:
+      dialog_explanation: |
+        The distance from the input features within which buffer zones are created. 
+        Must be a positive number. Use the Buffer Units parameter to specify the 
+        unit of measurement.
+      scripting_explanation: |
+        A numeric value (int or float) representing the buffer distance. Example: 
+        100, 250.5, 1000
+    
+    buffer_units:
+      dialog_explanation: |
+        The linear unit to be used for the buffer distance. Choose from meters, 
+        feet, kilometers, or miles based on the scale of your analysis.
+      scripting_explanation: |
+        A string value, one of: "meters", "feet", "kilometers", or "miles". 
+        Example: "meters"
+    
+    dissolve_output:
+      dialog_explanation: |
+        Specifies whether overlapping buffers will be dissolved into single features. 
+        When checked, overlapping or adjacent buffers are combined. When unchecked, 
+        each input feature creates a separate buffer (may overlap).
+      scripting_explanation: |
+        A boolean value. True dissolves overlapping buffers, False keeps them 
+        separate. Example: True or False
+    
+    output_features:
+      dialog_explanation: |
+        The output feature class that will contain the buffer polygons. Specify 
+        a path to a new feature class or geodatabase feature class.
+      scripting_explanation: |
+        A string representing the output path. Example: r"C:\Data\output.gdb\buffers"
+  
+  code_samples:
+    - title: "Basic Buffer with Default Settings"
+      description: |
+        Create a 100-meter buffer around city points with dissolved output.
+      code: |
+        import arcpy
+        
+        # Set input parameters
+        input_fc = r"C:\Data\cities.shp"
+        output_fc = r"C:\Data\output.gdb\city_buffers"
+        distance = 100
+        units = "meters"
+        dissolve = True
+        
+        # Run buffer analysis
+        arcpy.yamlanalysistoolbox.BufferAnalysis(
+            input_fc, distance, units, dissolve, output_fc
+        )
+        
+        print(f"Buffer analysis complete: {output_fc}")
+    
+    - title: "Multiple Distance Buffers"
+      description: |
+        Create buffers at multiple distances to analyze proximity zones.
+      code: |
+        import arcpy
+        
+        input_fc = r"C:\Data\facilities.shp"
+        distances = [100, 250, 500]  # meters
+        
+        for distance in distances:
+            output_fc = rf"C:\Data\output.gdb\buffer_{distance}m"
+            arcpy.yamlanalysistoolbox.BufferAnalysis(
+                input_fc, distance, "meters", True, output_fc
+            )
+            print(f"Created {distance}m buffer: {output_fc}")
+    
+    - title: "Non-Dissolved Buffers with Different Units"
+      description: |
+        Create individual buffers in miles without dissolving overlaps.
+      code: |
+        import arcpy
+        
+        # Create 5-mile buffers around each school (no dissolve)
+        arcpy.yamlanalysistoolbox.BufferAnalysis(
+            input_features=r"C:\Data\schools.shp",
+            buffer_distance=5,
+            buffer_units="miles",
+            dissolve_output=False,
+            output_features=r"C:\Data\output.gdb\school_service_areas"
+        )
