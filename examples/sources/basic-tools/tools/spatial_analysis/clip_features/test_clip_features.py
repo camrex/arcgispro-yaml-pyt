@@ -4,13 +4,14 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.framework.schema import (
+from src.framework.config import (
     ImplementationConfig,
     ParameterConfig,
     ToolConfig,
     ToolMetadata,
 )
-from src.tools.spatial_analysis.clip_features.execute import execute_clip
+
+from .execute import execute_clip
 
 
 @pytest.fixture

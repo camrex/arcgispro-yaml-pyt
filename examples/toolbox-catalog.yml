@@ -1,0 +1,48 @@
+# Example Toolbox Configuration - Catalog Mode
+# This demonstrates a toolbox managed by the catalog system
+# Tools are assigned via catalog.yml, not here
+
+toolbox:
+  label: "Field Data Collection Toolbox"
+  alias: "fielddatacollection"
+  description: "Curated tools for field data collection workflows"
+  version: "2.0.0"
+
+documentation:
+  summary: |
+    A curated collection of tools optimized for field data collection and
+    preliminary analysis, sourced from multiple repositories.
+  description: |
+    This toolbox combines tools from various sources (team repositories,
+    local tools, and community contributions) into a focused collection
+    for field data collection workflows.
+    
+    Tools in this toolbox are managed via the catalog system, ensuring:
+    - Version consistency across the team
+    - Easy updates from source repositories
+    - Shared configurations and best practices
+    - Offline availability for field work
+    
+    The tool selection is optimized for:
+    - Mobile/tablet data collection
+    - Offline operation
+    - Quick validation and QC
+    - GPS data integration
+  tags:
+    - field work
+    - data collection
+    - mobile
+    - offline
+    - GPS
+    - validation
+  credits: |
+    Curated by: Field Operations Team
+    Sources: Team repositories, local tools, community contributions
+    Maintained by: John Doe (john.doe@example.com)
+  use_limitations: |
+    Tool selection and versions managed via catalog.yml. Individual tool
+    licensing and usage limitations apply based on source repository.
+
+# No tools section - managed by catalog.yml
+# The catalog system will populate tools from configured sources
+# See catalog.yml for tool assignments

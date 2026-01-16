@@ -6,7 +6,7 @@ import pytest
 @pytest.mark.unit
 def test_load_toolbox_config(get_toolbox):
     """Test loading main toolbox configuration."""
-    from src.framework.schema import load_toolbox_config
+    from src.framework.config import load_toolbox_config
 
     config = load_toolbox_config(get_toolbox("spatial_analysis"))
 
@@ -24,7 +24,7 @@ def test_load_toolbox_config(get_toolbox):
 @pytest.mark.unit
 def test_tool_config_parameter_validation(get_tool):
     """Test that tool configs have valid parameter indices."""
-    from src.framework.schema import load_tool_config
+    from src.framework.config import load_tool_config
 
     # Buffer tool
     buffer_config = load_tool_config(get_tool("spatial_analysis/buffer_analysis") / "tool.yml")
@@ -44,7 +44,7 @@ def test_tool_config_parameter_validation(get_tool):
 @pytest.mark.unit
 def test_parameter_config_validation():
     """Test parameter configuration validation."""
-    from src.framework.schema import FilterConfig, ParameterConfig
+    from src.framework.config import FilterConfig, ParameterConfig
 
     # Valid parameter with range filter
     param = ParameterConfig(
@@ -79,7 +79,7 @@ def test_invalid_tool_config_duplicate_indices(tmp_path):
     """Test that invalid tool config with duplicate indices fails validation."""
     import yaml
 
-    from src.framework.schema import load_tool_config
+    from src.framework.config import load_tool_config
 
     # Create invalid config with duplicate indices
     invalid_config = {

@@ -27,7 +27,7 @@ def execute_metadata_loader(parameters: list) -> None:
         arcpy.AddMessage("")
 
         # Capture the generation process
-        from src.framework.schema import load_toolbox_config
+        from src.framework.config import load_toolbox_config
 
         config_dir = toolbox_dir / "tools" / "config"
         toolbox_config = load_toolbox_config(config_dir)
@@ -35,9 +35,7 @@ def execute_metadata_loader(parameters: list) -> None:
         # Generate toolbox metadata if available
         if toolbox_config.documentation:
             arcpy.AddMessage("Generating toolbox metadata...")
-            from src.tools.load_tool_metadata.metadata_generator import (
-                create_toolbox_metadata_xml,
-            )
+            from .metadata_generator import create_toolbox_metadata_xml
 
             toolbox_xml_content = create_toolbox_metadata_xml(toolbox_config)
             toolbox_xml_path = toolbox_dir / "yaml_toolbox.pyt.xml"
@@ -68,9 +66,7 @@ def execute_metadata_loader(parameters: list) -> None:
 
             # Generate metadata
             try:
-                from src.tools.load_tool_metadata.metadata_generator import (
-                    generate_metadata_for_tool,
-                )
+                from .metadata_generator import generate_metadata_for_tool
 
                 generate_metadata_for_tool(tool_config_path, toolbox_dir, class_name)
 

@@ -183,7 +183,7 @@ parameters:
 
 ```python
 import arcpy
-from src.framework.schema import ToolConfig
+from src.framework.config import ToolConfig
 from src.framework.validators import validate_all_parameters
 
 def execute_my_new_tool(parameters, messages, config: ToolConfig):
@@ -247,7 +247,7 @@ Tests automatically discover all tools and toolboxes:
 # tests/test_discovery.py validates ALL tools
 def test_all_tools_have_valid_config(all_tools):
     """Auto-discovers and validates all tool configs."""
-    from src.framework.schema import load_tool_config
+    from src.framework.config import load_tool_config
     
     for tool_path, tool_name in all_tools:
         config = load_tool_config(tool_path / "tool.yml")
@@ -372,7 +372,7 @@ See [docs/development/testing.md](docs/development/testing.md) for complete test
 **3. Flattened Framework**
 - Simple, flat structure: `factory.py`, `schema.py`, `validators.py`, `yaml_tool.py`
 - No nested subdirectories with single files
-- Cleaner imports: `from src.framework.schema import ToolConfig`
+- Cleaner imports: `from src.framework.config import ToolConfig`
 
 **4. Multiple Toolboxes**
 - Organize tools into separate .pyt files

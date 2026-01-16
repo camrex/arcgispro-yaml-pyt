@@ -35,7 +35,7 @@ def test_discover_all_tools(all_tools):
 @pytest.mark.unit
 def test_all_tools_have_valid_config(all_tools):
     """Test that all discovered tools have valid YAML configuration."""
-    from src.framework.schema import load_tool_config
+    from src.framework.config import load_tool_config
 
     for tool_path, tool_name in all_tools:
         config = load_tool_config(tool_path / "tool.yml")
@@ -47,7 +47,7 @@ def test_all_tools_have_valid_config(all_tools):
 @pytest.mark.unit
 def test_all_toolboxes_have_valid_config(all_toolboxes):
     """Test that all discovered toolboxes have valid YAML configuration."""
-    from src.framework.schema import load_toolbox_config
+    from src.framework.config import load_toolbox_config
 
     for toolbox_path in all_toolboxes:
         config = load_toolbox_config(toolbox_path)

@@ -1,0 +1,58 @@
+# Example Toolbox Configuration - Standalone Mode
+# This demonstrates a toolbox that directly references tools by path
+# Use this when NOT using the catalog system
+
+toolbox:
+  label: "Spatial Analysis Toolkit"
+  alias: "spatialanalysis"
+  description: "Comprehensive spatial analysis tools for buffer and clip operations"
+  version: "1.2.0"
+
+documentation:
+  summary: |
+    A professional toolbox for spatial analysis operations including buffer creation,
+    feature clipping, and proximity analysis.
+  description: |
+    This toolbox provides essential spatial analysis tools designed for daily
+    GIS workflows. All tools support large datasets and include progress indicators
+    for long-running operations.
+    
+    Key Features:
+    - Buffer analysis with multiple distance options
+    - Feature clipping with topology preservation
+    - Batch processing support
+    - Detailed error messages and validation
+    
+    All tools have been tested with ArcGIS Pro 3.x and support both feature
+    classes and shapefiles as input.
+  tags:
+    - spatial analysis
+    - geoprocessing
+    - buffer
+    - clip
+    - proximity
+    - batch processing
+  credits: |
+    Developed by: GIS Analysis Team
+    Contributors: Jane Smith, John Doe
+    Version: 1.2.0
+    Last Updated: January 2026
+  use_limitations: |
+    For internal use only. Results should be validated for production workflows.
+    Performance may vary with very large datasets (>1M features).
+
+# Tool registry - standalone mode
+tools:
+  # Active tools
+  - name: buffer_analysis
+    enabled: true
+    config: "../../tools/spatial_analysis/buffer_analysis/tool.yml"
+  
+  - name: clip_features
+    enabled: true
+    config: "../../tools/spatial_analysis/clip_features/tool.yml"
+  
+  # Disabled tools (present but not loaded)
+  - name: proximity_analysis
+    enabled: false
+    config: "../../tools/spatial_analysis/proximity_analysis/tool.yml"

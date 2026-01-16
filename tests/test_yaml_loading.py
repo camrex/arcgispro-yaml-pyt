@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.framework.schema import load_tool_config, load_toolbox_config
+from src.framework.config import load_tool_config, load_toolbox_config
 
 
 @pytest.mark.unit

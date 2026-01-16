@@ -5,7 +5,7 @@ from typing import Any
 
 import arcpy
 
-from src.framework.schema import ToolConfig, ValidationCheck
+from src.framework.config import ToolConfig, ValidationCheck
 
 
 class ValidationError(Exception):

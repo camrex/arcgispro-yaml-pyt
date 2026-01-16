@@ -79,13 +79,13 @@ def mock_arcpy():
 @pytest.fixture
 def toolbox_root():
     """Get path to toolboxes root directory."""
-    return Path(__file__).parent.parent / "src" / "toolboxes"
+    return Path(__file__).parent.parent / "examples" / "sources" / "basic-tools" / "toolboxes"
 
 
 @pytest.fixture
 def tools_root():
     """Get path to tools root directory."""
-    return Path(__file__).parent.parent / "src" / "tools"
+    return Path(__file__).parent.parent / "examples" / "sources" / "basic-tools" / "tools"
 
 
 @pytest.fixture

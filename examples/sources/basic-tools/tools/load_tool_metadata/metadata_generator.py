@@ -10,7 +10,7 @@ from pathlib import Path
 
 import yaml
 
-from src.framework.schema import ToolConfig
+from src.framework.config import ToolConfig
 
 
 def wrap_in_html_div(text: str, preserve_newlines: bool = False) -> str:

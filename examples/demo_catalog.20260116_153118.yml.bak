@@ -1,0 +1,22 @@
+version: '1.0'
+sources:
+- id: basic-tools
+  name: Basic Tools
+  type: local
+  branch: main
+  path: examples\sources\basic-tools
+  enabled: true
+  last_sync: '2026-01-16T21:31:18.221418Z'
+  discovered_tools: 3
+toolboxes:
+- id: my-spatial-tools
+  name: My Spatial Analysis Tools
+  path: my_spatial_tools.pyt
+  description: Custom toolbox with selected spatial analysis tools
+  tools:
+  - source_id: basic-tools
+    tool_path: tools/spatial_analysis/buffer_analysis
+    enabled: true
+  created: '2026-01-16T15:31:18.222867'
+  modified: '2026-01-16T15:31:18.224372'
+  auto_regenerate: true

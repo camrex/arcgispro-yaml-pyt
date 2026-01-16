@@ -21,7 +21,8 @@ def mock_arcpy(monkeypatch):
 def test_metadata_loader_tool_creation():
     """Test that metadata loader tool can be created from YAML config."""
     from src.framework.factory import create_tool_class
-    from src.tools.load_tool_metadata.execute import execute_metadata_loader
+
+    from .execute import execute_metadata_loader
 
     config_path = Path(__file__).parent / "tool.yml"
     assert config_path.exists(), f"Config not found: {config_path}"
@@ -51,7 +52,7 @@ def test_metadata_loader_tool_creation():
 
 def test_metadata_loader_in_toolbox():
     """Test that metadata loader tool is registered in the toolbox."""
-    from src.framework.schema import load_toolbox_config
+    from src.framework.config import load_toolbox_config
 
     # Get utilities toolbox path relative to this test file
     # From: src/tools/load_tool_metadata/test_metadata_loader.py
@@ -71,7 +72,7 @@ def test_metadata_loader_in_toolbox():
 
 def test_metadata_loader_has_documentation():
     """Test that metadata loader tool has proper documentation."""
-    from src.framework.schema import load_tool_config
+    from src.framework.config import load_tool_config
 
     config_path = Path(__file__).parent / "tool.yml"
     tool_config = load_tool_config(config_path)

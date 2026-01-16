@@ -1,0 +1,15 @@
+# Minimal Toolbox Configuration
+# Demonstrates the minimum required fields
+
+toolbox:
+  label: "My Basic Tools"
+  alias: "mybasictools"
+  description: "Simple toolbox for personal GIS tools"
+
+# Minimal tools section
+tools:
+  - name: buffer
+    config: "tools/buffer/tool.yml"
+  
+  - name: clip  
+    config: "tools/clip/tool.yml"

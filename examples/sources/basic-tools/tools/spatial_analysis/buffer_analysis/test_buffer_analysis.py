@@ -4,14 +4,15 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.framework.schema import (
+from src.framework.config import (
     ImplementationConfig,
     ParameterConfig,
     ToolConfig,
     ToolMetadata,
     ValidationCheck,
 )
-from src.tools.spatial_analysis.buffer_analysis.execute import execute_buffer
+
+from .execute import execute_buffer
 
 
 @pytest.fixture

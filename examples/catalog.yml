@@ -1,0 +1,163 @@
+# Example Catalog Configuration
+# This demonstrates a typical setup with multiple sources and toolboxes
+
+version: "1.0"
+
+# Global settings (all optional)
+settings:
+  arcgis_pro_path: "C:/Program Files/ArcGIS/Pro"
+  python_env: "arcgispro-py3"
+  auto_sync: true
+
+# Tool sources - where tools are discovered
+sources:
+  # Local example tools - included with this project
+  - id: basic-tools
+    name: "Example Basic Tools"
+    type: local
+    path: ./examples/sources/basic-tools
+    enabled: true
+    last_sync: 2026-01-16T13:57:00Z
+    discovered_tools: 3
+
+  # Git repository - team's shared tools (example)
+  - id: team-hydrology
+    name: "Team Hydrology Tools"
+    type: git
+    url: https://github.com/org/hydrology-tools
+    branch: main
+    local_path: C:/Users/jdoe/.arcgis_yaml_toolbox/sources/team-hydrology
+    enabled: false
+    last_sync: 2026-01-16T10:30:00Z
+    discovered_tools: 5
+
+  # Local folder - personal tools in development (example)
+  - id: personal-dev
+    name: "Personal Development Tools"
+    type: local
+    path: C:/GIS/MyTools/dev
+    enabled: false
+    last_sync: 2026-01-16T09:15:00Z
+    discovered_tools: 3
+
+  # Network drive - company-wide tools (example)
+  - id: company-toolkit
+    name: "Company GIS Toolkit"
+    type: network
+    path: \\fileserver\gis\tools
+    enabled: false
+    last_sync: 2026-01-15T14:20:00Z
+    discovered_tools: 12
+
+  # Another Git source - open source tools (example)
+  - id: community-tools
+    name: "Community Tools Collection"
+    type: git
+    url: https://github.com/community/gis-tools
+    branch: stable
+    local_path: C:/Users/jdoe/.arcgis_yaml_toolbox/sources/community-tools
+    enabled: false
+    last_sync: 2026-01-14T08:00:00Z
+    discovered_tools: 8
+
+# Toolboxes - Python Toolboxes that reference tools
+toolboxes:
+  # Basic example toolbox using the example tools
+  - id: example-toolbox
+    name: "Example Toolbox"
+    description: "Example toolbox using basic tools from this project"
+    path: ./examples/sources/basic-tools/toolboxes/example.pyt
+    enabled: true
+    tools:
+      - source_id: basic-tools
+        tool_id: buffer_analysis
+        enabled: true
+      - source_id: basic-tools
+        tool_id: clip_features
+        enabled: true
+
+  # Field work toolbox - tools for field data collection
+  - id: field-analysis
+    name: "Field Analysis Toolbox"
+    description: "Tools for field data collection and preliminary analysis"
+    path: C:/Projects/FieldWork/field_analysis.pyt
+    created: 2026-01-10T12:00:00Z
+    modified: 2026-01-16T10:30:00Z
+    auto_regenerate: true
+    tools:
+      # Hydrology tools from team repo
+      - source_id: team-hydrology
+        tool_path: tools/watershed_delineation
+      - source_id: team-hydrology
+        tool_path: tools/flow_accumulation
+      
+      # Personal tools
+      - source_id: personal-dev
+        tool_path: tools/buffer_analysis
+      
+      # Company tools
+      - source_id: company-toolkit
+        tool_path: tools/data_validation
+
+  # Office analysis toolbox - more complex tools
+  - id: office-analysis
+    name: "Office Analysis Toolbox"
+    description: "Advanced analysis tools for office-based work"
+    path: C:/Projects/Analysis/office_analysis.pyt
+    created: 2026-01-12T14:30:00Z
+    modified: 2026-01-16T09:00:00Z
+    auto_regenerate: true
+    tools:
+      # More hydrology tools
+      - source_id: team-hydrology
+        tool_path: tools/catchment_analysis
+      - source_id: team-hydrology
+        tool_path: tools/stream_network
+      
+      # Community tools
+      - source_id: community-tools
+        tool_path: tools/terrain_analysis
+      - source_id: community-tools
+        tool_path: tools/visibility_analysis
+      
+      # Company advanced tools
+      - source_id: company-toolkit
+        tool_path: tools/spatial_statistics
+        alias: "Advanced Spatial Stats"  # Renamed in this toolbox
+
+  # Data management toolbox
+  - id: data-management
+    name: "Data Management Toolbox"
+    description: "Tools for data preparation and management"
+    path: C:/Projects/DataMgmt/data_management.pyt
+    created: 2026-01-08T10:00:00Z
+    modified: 2026-01-15T16:45:00Z
+    auto_regenerate: true
+    tools:
+      # Basic tools from multiple sources
+      - source_id: personal-dev
+        tool_path: tools/clip_features
+      - source_id: company-toolkit
+        tool_path: tools/batch_conversion
+      - source_id: community-tools
+        tool_path: tools/metadata_updater
+      
+      # Temporarily disabled tool
+      - source_id: company-toolkit
+        tool_path: tools/legacy_import
+        enabled: false  # Disabled but not removed
+
+  # Experimental toolbox - testing new tools
+  - id: experimental
+    name: "Experimental Toolbox"
+    description: "Testing new tools before production use"
+    path: C:/Projects/Testing/experimental.pyt
+    created: 2026-01-16T08:00:00Z
+    modified: 2026-01-16T10:00:00Z
+    auto_regenerate: true
+    tools:
+      # All from personal dev
+      - source_id: personal-dev
+        tool_path: tools/new_algorithm
+      - source_id: personal-dev
+        tool_path: tools/performance_test

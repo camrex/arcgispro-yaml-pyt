@@ -38,7 +38,7 @@ An ArcGIS Pro Add-in that makes building and managing GIS tools as easy as savin
 **Model 2: Add-in (Tool Catalog Manager)**
 - Framework lives in Add-in (single installation)
 - **Central tool catalog** - All available tools from all sources
-- **Tool assignment** - Compose toolboxes from catalog (many-to-many)
+- **Toolbox management** - Add/remove tools to/from toolboxes (many-to-many)
 - **Source management** - VCS repos, local folders, network drives
 - **YAML-driven, UI-managed** - Add-in writes YAML, you work in UI
 - Multiple toolboxes, single framework version
@@ -64,7 +64,7 @@ Both use identical YAML + Python architecture. Only difference is where framewor
 **Add-in features (additive, non-breaking):**
 - **Tool catalog** - Central registry of all available tools
 - **Source management** - Add tools from VCS, local, network drives
-- **Toolbox assignment** - Same tool in multiple toolboxes
+- **Toolbox management** - Add/remove tools to/from toolboxes (many-to-many)
 - VCS integration (automatic sync)
 - Dependency validation (warnings only)
 - Tool discovery UI (search across all sources)
@@ -201,13 +201,22 @@ class Toolbox:
 4. Add-in generates `toolbox.yml` and `.pyt` file
 5. Toolbox appears in Pro (empty)
 
-**Step 4: Assign Tools to Toolbox**
+**Step 4: Manage Tools in Toolbox**
+
+*Adding tools:*
 1. Open "My Analysis Tools" in Add-in
 2. Click "Add Tool" → Browse catalog
 3. Select tools to include (multi-select supported)
 4. Click "Add to Toolbox"
 5. Add-in updates `toolbox.yml`, refreshes Pro
 6. Tools appear in ArcGIS Pro catalog
+
+*Removing tools:*
+1. Open "My Analysis Tools" in Add-in
+2. Select tool(s) to remove
+3. Click "Remove from Toolbox"
+4. Add-in updates `toolbox.yml`, refreshes Pro
+5. Tools disappear from ArcGIS Pro catalog (but remain in catalog/sources)
 
 **Result:** Project toolbox with tools from your catalog sources. Same tools can be used in other toolboxes.
 

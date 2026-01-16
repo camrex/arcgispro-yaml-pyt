@@ -4,7 +4,7 @@ from pathlib import Path
 
 import arcpy
 
-from src.framework.schema import ToolConfig, load_tool_config
+from src.framework.config import ToolConfig, load_tool_config
 
 
 class YAMLTool:

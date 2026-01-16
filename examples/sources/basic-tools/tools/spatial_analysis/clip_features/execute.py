@@ -2,9 +2,10 @@
 
 import arcpy
 
-from src.framework.schema import ToolConfig
+from src.framework.config import ToolConfig
 from src.framework.validators import validate_all_parameters, validate_inputs
-from src.tools.spatial_analysis.helpers.geoprocessing import (
+
+from ..helpers.geoprocessing import (
     check_spatial_reference,
     get_feature_count,
 )

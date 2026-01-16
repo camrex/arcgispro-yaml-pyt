@@ -2,9 +2,10 @@
 
 import arcpy
 
-from src.framework.schema import ToolConfig
+from src.framework.config import ToolConfig
 from src.framework.validators import validate_all_parameters, validate_inputs
-from src.tools.spatial_analysis.helpers.geoprocessing import check_spatial_reference
+
+from ..helpers.geoprocessing import check_spatial_reference
 
 
 def execute_buffer(parameters, messages, config: ToolConfig):

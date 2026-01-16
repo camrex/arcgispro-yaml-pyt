@@ -62,7 +62,10 @@ class ToolboxConfig(BaseModel):
     """Complete toolbox configuration (toolbox.yml)."""
 
     toolbox: ToolboxMetadata
-    tools: list[ToolReference] = Field(..., description="List of tools to include")
+    tools: list[ToolReference] = Field(
+        default_factory=list,
+        description="List of tools to include (optional in catalog mode, required in standalone)",
+    )
     documentation: ToolboxDocumentation | None = Field(
         default=None, description="Optional documentation metadata for the toolbox"
     )
@@ -73,7 +76,8 @@ class ToolboxConfig(BaseModel):
         """Ensure tool names are unique."""
         names = [tool.name for tool in v]
         if len(names) != len(set(names)):
-            raise ValueError(f"Duplicate tool names found: {names}")
+            duplicates = [name for name in names if names.count(name) > 1]
+            raise ValueError(f"Duplicate tool names found: {set(duplicates)}")
         return v
 
 
@@ -101,7 +105,7 @@ class ParameterConfig(BaseModel):
     filter: FilterConfig | None = None
     columns: list[list[str]] | None = None  # For GPValueTable
     validation: list["ValidationCheck"] | None = Field(
-        None, description="Runtime validation checks for this parameter"
+        default=None, description="Runtime validation checks for this parameter"
     )
 
 
